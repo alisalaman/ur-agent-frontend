@@ -1,0 +1,262 @@
+---
+description: Interface, interaction, and content design guidelines for GOV.UK applications
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+tags: ["interface-design", "interaction", "content", "ux", "govuk", "accessibility"]
+priority: 2
+alwaysApply: true
+---
+
+# Interface, Interaction & Content Design Guidelines
+
+## Context
+Comprehensive design patterns and user experience guidelines for building interfaces that follow GOV.UK Design System standards, ensure accessibility compliance, and provide excellent user experience for government services. Covers general interface design, user interactions, content presentation, and specialized patterns like AI chat interfaces.
+
+## General Interface Design Principles
+
+### User Experience Guidelines
+- **Follow GOV.UK Design System** components and patterns for consistency
+- **Ensure accessibility compliance** with WCAG 2.1 AA standards
+- **Use clear, plain English** following [GOV.UK content design standards](https://www.gov.uk/guidance/content-design)
+- **Implement progressive enhancement** for better accessibility
+- **Provide clear feedback** for user actions and system states
+
+### Interface Components
+- **Use GOV.UK Design System components** where appropriate
+- **Implement proper focus management** for keyboard navigation
+- **Provide clear visual hierarchy** for content and actions
+- **Use semantic HTML** and proper ARIA attributes
+- **Ensure responsive design** across all devices
+
+### User Interaction Patterns
+- **Design intuitive navigation** with clear information architecture
+- **Provide immediate feedback** for user actions
+- **Implement proper loading states** and progress indicators
+- **Handle errors gracefully** with helpful recovery options
+- **Support multiple input methods** (keyboard, mouse, touch, voice)
+
+## GOV.UK Design System Integration
+
+### Core Components
+- **GOV.UK Button** for user actions and form submissions
+- **GOV.UK Input** for text input and search functionality
+- **GOV.UK Textarea** for longer text input
+- **GOV.UK Select** for dropdown selections
+- **GOV.UK Checkboxes** and **Radio buttons** for multiple/single choices
+- **GOV.UK Fieldset** for grouping related form elements
+- **GOV.UK Error Summary** for validation errors
+- **GOV.UK Notification Banner** for system messages
+- **GOV.UK Loading Spinner** for processing states
+
+### Layout Components
+- **GOV.UK Grid** for responsive layouts
+- **GOV.UK Summary List** for displaying key-value pairs
+- **GOV.UK Table** for structured data
+- **GOV.UK Accordion** for collapsible content
+- **GOV.UK Tabs** for organizing related content
+- **GOV.UK Back Link** for navigation
+
+### Content Components
+- **GOV.UK Heading** for content hierarchy
+- **GOV.UK Body** for paragraph text
+- **GOV.UK List** for bullet and numbered lists
+- **GOV.UK Inset Text** for important information
+- **GOV.UK Warning Text** for warnings and alerts
+- **GOV.UK Details** for expandable content
+
+### Accessibility Requirements
+- **Screen reader support** for all interface elements
+- **Keyboard navigation** for all interactive elements
+- **High contrast mode** compatibility
+- **Focus management** during dynamic content updates
+- **Alternative text** for all images and icons
+- **Skip links** for keyboard users
+- **ARIA landmarks** for page structure
+
+## General Interface Patterns
+
+### Form Design Patterns
+```typescript
+// Example form component using GOV.UK Design System
+interface FormFieldProps {
+  label: string;
+  hint?: string;
+  error?: string;
+  required?: boolean;
+  id: string;
+  type?: 'text' | 'email' | 'tel' | 'url' | 'number';
+}
+
+function FormField({ label, hint, error, required, id, type = 'text' }: FormFieldProps) {
+  return (
+    <div className={`govuk-form-group ${error ? 'govuk-form-group--error' : ''}`}>
+      <label className="govuk-label" htmlFor={id}>
+        {label}
+        {required && <span className="govuk-visually-hidden"> (required)</span>}
+      </label>
+      {hint && (
+        <div className="govuk-hint" id={`${id}-hint`}>
+          {hint}
+        </div>
+      )}
+      {error && (
+        <span className="govuk-error-message">
+          <span className="govuk-visually-hidden">Error:</span> {error}
+        </span>
+      )}
+      <input
+        className={`govuk-input ${error ? 'govuk-input--error' : ''}`}
+        id={id}
+        name={id}
+        type={type}
+        aria-describedby={hint ? `${id}-hint` : undefined}
+        aria-invalid={error ? 'true' : 'false'}
+      />
+    </div>
+  );
+}
+```
+
+### Navigation Patterns
+- **Use GOV.UK Breadcrumbs** for hierarchical navigation
+- **Implement skip links** for keyboard users
+- **Provide clear page titles** and headings
+- **Use consistent navigation patterns** across the application
+- **Implement proper focus management** during navigation
+
+### Data Display Patterns
+- **Use GOV.UK Summary List** for key-value pairs
+- **Implement responsive tables** for structured data
+- **Use GOV.UK Cards** for grouped information
+- **Provide clear data hierarchy** with proper headings
+- **Implement pagination** for large datasets
+
+### Interactive Elements
+- **Use GOV.UK Accordion** for collapsible content
+- **Implement GOV.UK Tabs** for related content sections
+- **Use GOV.UK Details** for expandable information
+- **Provide clear hover and focus states**
+- **Implement proper keyboard interactions**
+
+## AI Chat Interface Patterns
+
+### Message Display Components
+```typescript
+// Example chat message component using GOV.UK Design System
+interface ChatMessageProps {
+  message: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+  status?: 'sending' | 'sent' | 'delivered' | 'error';
+}
+
+function ChatMessage({ message, sender, timestamp, status }: ChatMessageProps) {
+  return (
+    <div className={`govuk-chat-message govuk-chat-message--${sender}`}>
+      <div className="govuk-chat-message__header">
+        <span className="govuk-chat-message__sender">
+          {sender === 'user' ? 'You' : 'Assistant'}
+        </span>
+        <time className="govuk-chat-message__timestamp">
+          {timestamp.toLocaleTimeString()}
+        </time>
+        {status && (
+          <span className={`govuk-chat-message__status govuk-chat-message__status--${status}`}>
+            {status}
+          </span>
+        )}
+      </div>
+      <div className="govuk-chat-message__content">
+        <p className="govuk-body">{message}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+### Input Handling
+- **Use GOV.UK Textarea** for message input with proper validation
+- **Implement character limits** with clear user feedback
+- **Handle Enter key** for message sending (Shift+Enter for new lines)
+- **Provide clear submit button** with loading states
+- **Implement proper form validation** following GOV.UK patterns
+
+### Error Handling
+- **Use GOV.UK Error Summary** for validation errors
+- **Implement retry mechanisms** for failed AI responses
+- **Provide clear error messages** in plain English
+- **Handle network failures** gracefully with offline indicators
+- **Show helpful recovery options** for common errors
+
+### Loading States
+- **Use GOV.UK Loading Spinner** for processing states
+- **Implement typing indicators** for AI responses
+- **Show progress indicators** for long operations
+- **Provide estimated wait times** when possible
+- **Allow cancellation** of long-running operations
+
+## Content Design Guidelines
+
+### General Content Principles
+- **Use clear, plain English** following [GOV.UK content design standards](https://www.gov.uk/guidance/content-design)
+- **Write for your audience** - use language they understand
+- **Be concise and direct** - avoid unnecessary words
+- **Use active voice** where possible
+- **Break up long content** with headings, lists, and short paragraphs
+
+### Content Structure
+- **Use clear headings** to organize content hierarchy
+- **Implement proper list formatting** for bullet points and numbered lists
+- **Use GOV.UK Inset Text** for important information
+- **Implement GOV.UK Warning Text** for alerts and warnings
+- **Use GOV.UK Details** for expandable content
+
+### Form Content Guidelines
+- **Provide helpful placeholder text** for input fields
+- **Show character limits** clearly
+- **Implement input validation** with helpful error messages
+- **Use clear field labels** and descriptions
+- **Provide examples** of expected input format
+
+### AI-Specific Content Patterns
+- **Format AI responses clearly** with proper structure
+- **Handle code blocks** with syntax highlighting
+- **Format links** with descriptive text
+- **Use tables** for structured data when appropriate
+- **Provide alternative formats** for complex content
+
+### Accessibility Features
+- **Announce dynamic content** to screen readers
+- **Provide keyboard shortcuts** for common actions
+- **Implement proper focus management** during interactions
+- **Use high contrast** for better visibility
+- **Provide alternative formats** for complex content
+
+## Performance Optimisation
+
+### General Interface Performance
+- **Implement lazy loading** for non-critical components
+- **Use code splitting** to reduce initial bundle size
+- **Optimise images** with proper compression and modern formats
+- **Use efficient state management** for complex applications
+- **Implement proper cleanup** for event listeners and subscriptions
+
+### Data Handling Performance
+- **Implement virtual scrolling** for large datasets
+- **Use pagination** for large data sets
+- **Cache frequently accessed data** appropriately
+- **Implement proper data fetching** strategies
+- **Optimise API calls** with request deduplication
+
+### Network Optimisation
+- **Implement offline support** with service workers
+- **Use WebSocket connections** for real-time communication
+- **Implement proper retry logic** for failed requests
+- **Cache static assets** with appropriate headers
+- **Optimise payload sizes** for better performance
+
+### AI Chat Specific Performance
+- **Implement message queuing** for offline scenarios
+- **Stream responses** for better perceived performance
+- **Cache conversation history** efficiently
+- **Implement proper cleanup** for real-time connections
+- **Optimise message rendering** for large conversations

@@ -1,0 +1,172 @@
+---
+description: Core TypeScript/Node.js development principles and standards
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+tags: ["typescript", "nodejs", "standards", "core", "govuk"]
+priority: 1
+alwaysApply: false
+---
+
+# Core TypeScript/Node.js Development Principles
+
+## Context
+Universal principles for writing high-quality TypeScript/Node.js code that emphasises readability, maintainability, and robustness, with specific focus on GOV.UK frontend development.
+
+## Guidelines
+
+### Modern TypeScript/Node.js Standards
+- Use TypeScript 4.9+ features (satisfies operator, const assertions, template literal types)
+- Follow ESLint and Prettier configuration for consistent formatting
+- Implement comprehensive type definitions for all public interfaces
+- Use interfaces, enums, and type unions for structured data
+- Leverage modern JavaScript features (optional chaining, nullish coalescing, destructuring)
+
+### GOV.UK Design System Compliance
+- Follow GOV.UK Design System component patterns and naming conventions
+- Ensure accessibility compliance with WCAG 2.1 AA standards
+- Use semantic HTML elements and proper ARIA attributes
+- Follow GOV.UK content guidelines for user-facing text
+- Implement responsive design patterns from the Design System
+
+### Clean Code Principles
+- Follow SOLID principles (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion)
+- Apply DRY (Don't Repeat Yourself) and KISS (Keep It Simple, Stupid)
+- Write self-documenting code with meaningful names
+- Favour explicit over implicit behaviour
+- Use composition over inheritance when possible
+
+### Function and Component Design
+- Keep functions and components small and focussed (prefer <50 lines)
+- Use descriptive parameter and variable names
+- Return early to reduce nesting levels
+- Implement single responsibility per function/component
+- Handle edge cases explicitly with proper error boundaries
+
+## Examples
+
+### ✅ Good Example
+```typescript
+interface User {
+  name: string;
+  email: string;
+  age: number;
+}
+
+interface EmailValidator {
+  validate(email: string): boolean;
+}
+
+interface UserProfileProps {
+  name: string;
+  email: string;
+  age: number;
+  validator: EmailValidator;
+}
+
+function createUserProfile(
+  name: string,
+  email: string,
+  age: number,
+  validator: EmailValidator
+): User | null {
+  /**
+   * Create a user profile with validation.
+   * 
+   * @param name - User's full name
+   * @param email - User's email address
+   * @param age - User's age in years
+   * @param validator - Email validation service
+   * @returns User instance if valid, null otherwise
+   */
+  if (!validator.validate(email)) {
+    return null;
+  }
+
+  if (age < 0) {
+    return null;
+  }
+
+  return { name, email, age };
+}
+
+// React component example
+function UserProfile({ name, email, age, validator }: UserProfileProps) {
+  const user = createUserProfile(name, email, age, validator);
+  
+  if (!user) {
+    return (
+      <div className="govuk-error-summary" role="alert">
+        <h2 className="govuk-error-summary__title">
+          There is a problem
+        </h2>
+        <div className="govuk-error-summary__body">
+          <p>Please check your details and try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="govuk-summary-list">
+      <dl className="govuk-summary-list__row">
+        <dt className="govuk-summary-list__key">Name</dt>
+        <dd className="govuk-summary-list__value">{user.name}</dd>
+      </dl>
+      <dl className="govuk-summary-list__row">
+        <dt className="govuk-summary-list__key">Email</dt>
+        <dd className="govuk-summary-list__value">{user.email}</dd>
+      </dl>
+    </div>
+  );
+}
+```
+
+### ❌ Poor Example
+```typescript
+function createUser(n: any, e: any, a: any) {
+  if (e.includes("@") && a > 0) {
+    return { name: n, email: e, age: a };
+  } else {
+    return null;
+  }
+}
+
+// Poor React component
+function BadUserProfile(props: any) {
+  return <div>{props.user?.name}</div>;
+}
+```
+
+## TypeScript/Node.js Specific Guidelines
+
+### Type Safety
+- **Use strict TypeScript configuration** with noImplicitAny and strictNullChecks
+- **Define interfaces for all data structures** and API responses
+- **Use type guards** for runtime type checking
+- **Avoid `any` type** - use `unknown` or specific types instead
+- **Use generic types** for reusable components and functions
+
+### React Best Practices
+- **Use functional components** with hooks instead of class components
+- **Implement proper prop types** with TypeScript interfaces
+- **Use React.memo** for performance optimisation when appropriate
+- **Implement error boundaries** for graceful error handling
+- **Follow React naming conventions** (PascalCase for components, camelCase for functions)
+
+### Performance Optimisation
+- **Use useCallback and useMemo** for expensive computations
+- **Implement code splitting** with React.lazy and Suspense
+- **Optimise bundle size** with tree shaking and dynamic imports
+- **Use React DevTools Profiler** to identify performance bottlenecks
+- **Implement virtual scrolling** for large lists
+
+### GOV.UK Specific Standards
+- **Follow GOV.UK Design System** component patterns and CSS classes
+- **Ensure accessibility compliance** with WCAG 2.1 AA standards
+- **Use semantic HTML elements** and proper ARIA attributes
+- **Follow GOV.UK content guidelines** for user-facing text
+- **Implement responsive design** patterns from the Design System
+
+## British English
+- Use British spelling: colour, behaviour, centre, realise, optimise
+- Follow British conventions in documentation and comments
+- Use consistent terminology throughout the codebase

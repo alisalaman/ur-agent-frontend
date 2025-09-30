@@ -1,0 +1,451 @@
+---
+description: Comprehensive error handling and resilience patterns for TypeScript/Node.js
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+tags: ["errors", "exceptions", "resilience", "frontend", "govuk"]
+priority: 3
+alwaysApply: false
+---
+
+# Error Handling & Resilience
+
+## Context
+Robust error handling strategies for TypeScript/Node.js applications that ensure graceful failure handling, provide meaningful user feedback, and follow GOV.UK error handling patterns.
+
+## Guidelines
+
+### Error Boundary Design
+- **Implement React Error Boundaries** for component-level error handling
+- **Create custom error classes** that reflect business domains
+- **Distinguish between recoverable and non-recoverable errors**
+- **Use specific error types** rather than generic Error
+- **Include contextual information** in error messages
+
+### Error Classification
+- **Retryable errors**: Network timeouts, rate limits, temporary service failures
+- **Non-retryable errors**: Authentication failures, validation errors, not found
+- **Critical errors**: Data corruption, security breaches, system failures
+- **User errors**: Invalid input, missing permissions, business rule violations
+
+### GOV.UK Error Handling Patterns
+- **Use GOV.UK error summary components** for form validation errors
+- **Implement proper error pages** following GOV.UK design patterns
+- **Provide clear, actionable error messages** in plain English
+- **Include error reference numbers** for support purposes
+- **Ensure error pages are accessible** and follow WCAG guidelines
+
+### Frontend Error Handling
+- **Use try/catch blocks** for async operations
+- **Implement proper loading states** and error states
+- **Handle network errors** gracefully with user-friendly messages
+- **Log errors** with proper context for debugging
+- **Implement retry mechanisms** for transient failures
+
+## Examples
+
+### ✅ Good Error Boundary Implementation
+```typescript
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: ErrorInfo;
+  errorId?: string;
+}
+
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return {
+      hasError: true,
+      error,
+      errorId: `ERR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    this.setState({ errorInfo });
+    
+    // Log error for debugging
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || <DefaultErrorFallback errorId={this.state.errorId} />;
+    }
+
+    return this.props.children;
+  }
+}
+
+function DefaultErrorFallback({ errorId }: { errorId?: string }) {
+  return (
+    <div className="govuk-error-summary" role="alert">
+      <h2 className="govuk-error-summary__title">
+        There is a problem
+      </h2>
+      <div className="govuk-error-summary__body">
+        <p>Something went wrong. Please try again.</p>
+        {errorId && (
+          <p className="govuk-body-s">
+            Error reference: {errorId}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Custom error classes
+export class ValidationError extends Error {
+  constructor(
+    public field: string,
+    public value: string,
+    public reason: string
+  ) {
+    super(`Validation failed for field '${field}': ${reason}`);
+    this.name = 'ValidationError';
+  }
+}
+
+export class ExternalServiceError extends Error {
+  constructor(
+    public service: string,
+    public operation: string,
+    public originalError: Error
+  ) {
+    super(`External service '${service}' failed during '${operation}': ${originalError.message}`);
+    this.name = 'ExternalServiceError';
+  }
+}
+```
+
+### ✅ Good Error Handling Pattern
+```typescript
+interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  error?: string;
+  errorCode?: string;
+}
+
+class ApiService {
+  private baseUrl: string;
+  private maxRetries: number = 3;
+  private retryDelay: number = 1000;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  async callExternalService<T>(
+    endpoint: string,
+    data: any,
+    correlationId?: string
+  ): Promise<ApiResponse<T>> {
+    let lastError: Error;
+
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(`${this.baseUrl}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Correlation-ID': correlationId || '',
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403 || response.status === 404) {
+            // Non-retryable errors
+            throw new ExternalServiceError(
+              'api',
+              'call',
+              new Error(`HTTP ${response.status}: ${response.statusText}`)
+            );
+          } else {
+            // Retryable errors
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+        }
+
+        const result = await response.json();
+        
+        console.info('External service call succeeded', {
+          endpoint,
+          statusCode: response.status,
+          correlationId,
+        });
+
+        return { data: result, success: true };
+
+      } catch (error) {
+        lastError = error as Error;
+
+        if (attempt === this.maxRetries) {
+          console.error('External service call failed after all retries', {
+            endpoint,
+            correlationId,
+            error: lastError.message,
+            errorType: lastError.constructor.name,
+          });
+          break;
+        }
+
+        console.warn(`External service call failed, retrying (attempt ${attempt})`, {
+          endpoint,
+          statusCode: (error as any)?.status,
+          correlationId,
+          error: lastError.message,
+        });
+
+        // Wait before retry with exponential backoff
+        await new Promise(resolve => 
+          setTimeout(resolve, this.retryDelay * Math.pow(2, attempt - 1))
+        );
+      }
+    }
+
+    return {
+      data: null as T,
+      success: false,
+      error: lastError!.message,
+      errorCode: 'EXTERNAL_SERVICE_ERROR'
+    };
+  }
+}
+```
+
+### ✅ Good React Hook for Error Handling
+```typescript
+import { useState, useEffect, useCallback } from 'react';
+
+interface UseAsyncState<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+  retry: () => void;
+}
+
+function useAsync<T>(
+  asyncFunction: () => Promise<T>,
+  dependencies: any[] = []
+): UseAsyncState<T> {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const execute = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await asyncFunction();
+      setData(result);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
+      console.error('Async operation failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, dependencies);
+
+  useEffect(() => {
+    execute();
+  }, [execute]);
+
+  return { data, loading, error, retry: execute };
+}
+
+// Usage in component
+function UserProfile({ userId }: { userId: string }) {
+  const { data: user, loading, error, retry } = useAsync(
+    () => apiService.fetchData<User>(`/users/${userId}`),
+    [userId]
+  );
+
+  if (loading) {
+    return (
+      <div className="govuk-spinner" role="status" aria-label="Loading">
+        <span className="govuk-visually-hidden">Loading user profile...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="govuk-error-summary" role="alert">
+        <h2 className="govuk-error-summary__title">
+          There is a problem
+        </h2>
+        <div className="govuk-error-summary__body">
+          <p>Unable to load user profile: {error}</p>
+          <button 
+            className="govuk-button govuk-button--secondary"
+            onClick={retry}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="govuk-inset-text">
+        <p>User not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="govuk-summary-list">
+      <dl className="govuk-summary-list__row">
+        <dt className="govuk-summary-list__key">Name</dt>
+        <dd className="govuk-summary-list__value">{user.name}</dd>
+      </dl>
+    </div>
+  );
+}
+```
+
+### ❌ Poor Error Handling
+```typescript
+// Bad: No error handling
+function processData(data: any) {
+  const result = externalApi.call(data);
+  return result; // Could throw unhandled errors
+}
+
+// Bad: Swallowing errors
+function badProcessData(data: any) {
+  try {
+    const result = externalApi.call(data);
+    return result;
+  } catch {
+    console.log("Something went wrong"); // Poor logging
+    return null; // Swallowing errors
+  }
+}
+
+// Bad: Generic error handling
+function genericProcessData(data: any) {
+  try {
+    const result = externalApi.call(data);
+    return result;
+  } catch (error) {
+    console.error("Error:", error); // No context
+    throw error; // Re-throwing without context
+  }
+}
+```
+
+## GOV.UK Error Page Patterns
+```typescript
+interface ErrorPageProps {
+  errorCode: string;
+  title: string;
+  message: string;
+  description?: string;
+  actionText?: string;
+  actionUrl?: string;
+  onRetry?: () => void;
+}
+
+function ErrorPage({
+  errorCode,
+  title,
+  message,
+  description,
+  actionText = "Try again",
+  actionUrl,
+  onRetry
+}: ErrorPageProps) {
+  return (
+    <div className="govuk-width-container">
+      <main className="govuk-main-wrapper" id="main-content" role="main">
+        <div className="govuk-grid-row">
+          <div className="govuk-grid-column-two-thirds">
+            <h1 className="govuk-heading-xl">{title}</h1>
+            <p className="govuk-body">{message}</p>
+            
+            {description && (
+              <p className="govuk-body">{description}</p>
+            )}
+            
+            <div className="govuk-inset-text">
+              <p className="govuk-body-s">
+                Error reference: {errorCode}
+              </p>
+            </div>
+            
+            <div className="govuk-button-group">
+              {onRetry && (
+                <button 
+                  className="govuk-button"
+                  onClick={onRetry}
+                >
+                  {actionText}
+                </button>
+              )}
+              
+              {actionUrl && (
+                <a 
+                  className="govuk-button govuk-button--secondary"
+                  href={actionUrl}
+                >
+                  Go back
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Specific error page components
+function NotFoundPage() {
+  return (
+    <ErrorPage
+      errorCode="404"
+      title="Page not found"
+      message="If you typed the web address, check it is correct."
+      description="If you pasted the web address, check you copied the entire address."
+      actionUrl="/"
+    />
+  );
+}
+
+function ServiceUnavailablePage({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <ErrorPage
+      errorCode="503"
+      title="Service unavailable"
+      message="We are experiencing technical difficulties."
+      description="Please try again in a few moments."
+      actionText="Try again"
+      onRetry={onRetry}
+    />
+  );
+}
+```

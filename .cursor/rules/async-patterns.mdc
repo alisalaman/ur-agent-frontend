@@ -1,0 +1,381 @@
+---
+description: Async programming patterns and best practices for TypeScript/Node.js
+globs: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]
+tags: ["async", "promises", "performance", "frontend"]
+priority: 5
+alwaysApply: false
+---
+
+# Async Programming Patterns
+
+## Context
+Best practices for async/await programming in TypeScript/Node.js, focusing on proper Promise handling, concurrency patterns, and frontend-specific async operations.
+
+## Guidelines
+
+### Promise and Async/Await Design
+- **Use async/await consistently** for asynchronous operations
+- **Handle Promise rejections** with proper error boundaries
+- **Prefer async/await over .then()** for better readability
+- **Use Promise.allSettled()** when you need all results regardless of failures
+- **Implement proper timeout handling** to prevent hanging operations
+
+### Frontend Async Patterns
+- **Use React Query/SWR** for server state management
+- **Implement proper loading states** and error boundaries
+- **Use AbortController** for cancelling requests
+- **Debounce/throttle** user input for API calls
+- **Cache API responses** appropriately
+
+### Error Handling in Async Code
+- **Wrap async operations** in try/catch blocks
+- **Handle network errors** gracefully with user-friendly messages
+- **Implement retry logic** for transient failures
+- **Use error boundaries** for React components
+- **Log errors** with proper context for debugging
+
+## Examples
+
+### ✅ Good Async Patterns
+
+#### API Calls with Error Handling
+```typescript
+interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  error?: string;
+}
+
+class ApiService {
+  private baseUrl: string;
+  private timeout: number;
+
+  constructor(baseUrl: string, timeout = 10000) {
+    this.baseUrl = baseUrl;
+    this.timeout = timeout;
+  }
+
+  async fetchData<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return { data, success: true };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          return { data: null as T, success: false, error: 'Request timeout' };
+        }
+        return { data: null as T, success: false, error: error.message };
+      }
+      
+      return { data: null as T, success: false, error: 'Unknown error occurred' };
+    }
+  }
+}
+```
+
+#### React Hook for Async Data
+```typescript
+import { useState, useEffect, useCallback } from 'react';
+
+interface UseAsyncDataResult<T> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+function useAsyncData<T>(
+  fetchFn: () => Promise<T>,
+  dependencies: any[] = []
+): UseAsyncDataResult<T> {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await fetchFn();
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, dependencies);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, loading, error, refetch: fetchData };
+}
+
+// Usage in component
+function UserProfile({ userId }: { userId: string }) {
+  const { data: user, loading, error, refetch } = useAsyncData(
+    () => apiService.fetchData<User>(`/users/${userId}`),
+    [userId]
+  );
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!user) return <div>User not found</div>;
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <button onClick={refetch}>Refresh</button>
+    </div>
+  );
+}
+```
+
+#### Concurrent API Calls
+```typescript
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface UserProfile {
+  user: User;
+  posts: Post[];
+  comments: Comment[];
+}
+
+async function fetchUserProfile(userId: string): Promise<UserProfile> {
+  try {
+    // Execute all requests concurrently
+    const [userResult, postsResult, commentsResult] = await Promise.allSettled([
+      apiService.fetchData<User>(`/users/${userId}`),
+      apiService.fetchData<Post[]>(`/users/${userId}/posts`),
+      apiService.fetchData<Comment[]>(`/users/${userId}/comments`)
+    ]);
+
+    // Handle results
+    const user = userResult.status === 'fulfilled' && userResult.value.success
+      ? userResult.value.data
+      : null;
+
+    const posts = postsResult.status === 'fulfilled' && postsResult.value.success
+      ? postsResult.value.data
+      : [];
+
+    const comments = commentsResult.status === 'fulfilled' && commentsResult.value.success
+      ? commentsResult.value.data
+      : [];
+
+    if (!user) {
+      throw new Error('Failed to fetch user data');
+    }
+
+    return { user, posts, comments };
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw error;
+  }
+}
+```
+
+#### Debounced Search
+```typescript
+import { useState, useEffect, useCallback } from 'react';
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+function SearchComponent() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  const searchUsers = useCallback(async (term: string) => {
+    if (!term.trim()) {
+      setResults([]);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiService.fetchData<User[]>(`/users/search?q=${encodeURIComponent(term)}`);
+      if (response.success) {
+        setResults(response.data);
+      }
+    } catch (error) {
+      console.error('Search failed:', error);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    searchUsers(debouncedSearchTerm);
+  }, [debouncedSearchTerm, searchUsers]);
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search users..."
+      />
+      {loading && <div>Searching...</div>}
+      <ul>
+        {results.map(user => (
+          <li key={user.id}>{user.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### ❌ Poor Async Patterns
+
+#### Unhandled Promise Rejections
+```typescript
+// Bad: Unhandled promise rejection
+function badApiCall() {
+  fetch('/api/data')
+    .then(response => response.json())
+    .then(data => console.log(data));
+  // No error handling!
+}
+
+// Good: Proper error handling
+async function goodApiCall() {
+  try {
+    const response = await fetch('/api/data');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error('API call failed:', error);
+  }
+}
+```
+
+#### Blocking the Event Loop
+```typescript
+// Bad: Synchronous operation blocking the event loop
+function badDataProcessing(data: any[]) {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    // Heavy synchronous operation
+    result.push(expensiveComputation(data[i]));
+  }
+  return result;
+}
+
+// Good: Non-blocking processing
+async function goodDataProcessing(data: any[]) {
+  const result = [];
+  const batchSize = 100;
+  
+  for (let i = 0; i < data.length; i += batchSize) {
+    const batch = data.slice(i, i + batchSize);
+    const batchResult = await Promise.all(
+      batch.map(item => expensiveComputation(item))
+    );
+    result.push(...batchResult);
+    
+    // Yield control to the event loop
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  
+  return result;
+}
+```
+
+#### Memory Leaks with Event Listeners
+```typescript
+// Bad: Event listeners not cleaned up
+function badComponent() {
+  useEffect(() => {
+    const handleResize = () => {
+      // Handle resize
+    };
+    
+    window.addEventListener('resize', handleResize);
+    // Missing cleanup!
+  }, []);
+}
+
+// Good: Proper cleanup
+function goodComponent() {
+  useEffect(() => {
+    const handleResize = () => {
+      // Handle resize
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+}
+```
+
+## Performance Considerations
+
+### Memory Management
+- **Use WeakMap/WeakSet** for object references that can be garbage collected
+- **Implement proper cleanup** in useEffect hooks
+- **Avoid memory leaks** with event listeners and timers
+- **Use React.memo** for expensive component re-renders
+
+### Event Loop Optimisation
+- **Batch state updates** to reduce re-renders
+- **Use useCallback and useMemo** for expensive computations
+- **Implement virtual scrolling** for large lists
+- **Use Web Workers** for CPU-intensive tasks
+
+### Network Optimisation
+- **Implement request deduplication** for identical API calls
+- **Use HTTP/2 server push** where appropriate
+- **Implement proper caching** strategies
+- **Compress API responses** and assets
