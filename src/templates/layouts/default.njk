@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" class="govuk-template">
+    <head>
+        <meta charset="utf-8">
+        <title>
+            {% block pageTitle %}
+                {% if title %}
+                    {{ title }} -
+                {% endif %}Chat Interface - GOV.UK{% endblock %}
+        </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#1d70b8">
+        <link rel="icon" sizes="48x48" href="/assets/images/favicon.ico">
+        <link rel="icon" sizes="any" href="/assets/images/favicon.svg" type="image/svg+xml">
+        <link rel="mask-icon" href="/assets/images/govuk-icon-mask.svg" color="#1d70b8">
+        <link rel="apple-touch-icon" href="/assets/images/govuk-icon-180.png">
+        <link rel="manifest" href="/assets/manifest.json">
+        <link rel="stylesheet" href="/css/application.css"> {% block head %}{% endblock %}
+        </head>
+        <body class="govuk-template__body">
+            <script>
+                document.body.className += ' js-enabled' + (
+                    'noModule' in HTMLScriptElement.prototype
+                        ? ' govuk-frontend-supported'
+                        : ''
+                );
+            </script>
+            <a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+            {% block header %}
+                {% from "govuk/components/header/macro.njk" import govukHeader %}
+                {{ govukHeader({
+                    homepageUrl: "/"
+                }) }}
+            {% endblock %}
+            {% block main %}
+                <div class="govuk-width-container">
+                    {% block phaseBanner %}
+                        {% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
+                        {{ govukPhaseBanner({
+                            tag: {
+                                text: "Alpha"
+                            },
+                            html: 'This is a new service. Help us improve it and <a class="govuk-link" href="#">give your feedback by email</a>.'
+                        }) }}
+                    {% endblock %}
+                    {% block beforeContent %}{% endblock %}
+                    <main class="govuk-main-wrapper" id="main-content" role="main">
+                        <div class="govuk-grid-row">
+                            <div class="govuk-grid-column-two-thirds">
+                                {% block content %}
+                                    <h1 class="govuk-heading-xl">Default Page Heading</h1>
+                                    <p class="govuk-body">This is the default layout. Create a new Nunjucks file and extend this layout to add your own
+                                        content.</p>
+                                {% endblock %}
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            {% endblock %}
+            {% block footer %}
+                <footer class="govuk-footer">
+                    <div class="govuk-width-container">
+                        <div class="govuk-footer__meta">
+                            <div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+                                <h2 class="govuk-visually-hidden">Support links</h2>
+                                <ul class="govuk-footer__inline-list">
+                                    <li class="govuk-footer__inline-list-item">
+                                        <a class="govuk-footer__link" href="/cookies">Cookies</a>
+                                    </li>
+                                    <li class="govuk-footer__inline-list-item">
+                                        <a class="govuk-footer__link" href="/privacy-policy">Privacy policy</a>
+                                    </li>
+                                    <li class="govuk-footer__inline-list-item">
+                                        <a class="govuk-footer__link" href="/accessibility-statement">Accessibility statement</a>
+                                    </li>
+                                </ul>
+                                <svg
+                                    role="presentation"
+                                    focusable="false"
+                                    class="govuk-footer__licence-logo"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewbox="0 0 483.2 195.7"
+                                    height="17"
+                                    width="41">
+                                    <path
+                                        fill="currentColor"
+                                        d="M421.5 142.8V.1l-50.7 32.3v161.1h112.4v-50.7zm-122.3-9.6A47.12 47.12 0 0 1 221 97.8c0-26 21.1-47.1 47.1-47.1 16.7 0
+                                            31.4 8.7 39.7 21.8l42.7-27.2A97.63 97.63 0 0 0 268.1 0c-36.5 0-68.3 20.1-85.1 49.7A98 98 0 0 0 97.8 0C44.9 0 0 44.9 0
+                                            97.8s44.9 97.8 97.8 97.8 36.4-8 53-22.5l-42.7-27.2a47.12 47.12 0 0 1-39.7 21.8c-26 0-47.1-21.1-47.1-47.1 0-26 21.1-47.1
+                                            47.1-47.1 16.7 0 31.4 8.7 39.7 21.8l42.7-27.2a97.63 97.63 0 0 0-39.7-21.8c-26 0-47.1 21.1-47.1 47.1 0 26 21.1 47.1 47.1
+                                            47.1 16.7 0 31.4-8.7 39.7-21.8l42.7 27.2c-16.7 14.5-36.4 22.5-53 22.5z"/>
+                                </svg>
+                                <span class="govuk-footer__licence-description">
+                                    All content is available under the
+                                    <a
+                                        class="govuk-footer__link"
+                                        href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+                                        rel="license">Open Government Licence v3.0</a>, except where otherwise stated
+                                </span>
+                            </div>
+                            <div class="govuk-footer__meta-item">
+                                <a
+                                    class="govuk-footer__link govuk-footer__copyright-logo"
+                                    href="https://www.nationalarchives.gov.uk/information-management/re-using-public-sector-information/uk-government-licensing-framework/crown-copyright/">
+                                    © Crown copyright</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            {% endblock %}
+            {% block bodyEnd %}
+                <script src="/js/govuk-frontend.js"></script>
+                <script src="/js/application.js"></script>
+            {% endblock %}
+        </body>
+    </html>

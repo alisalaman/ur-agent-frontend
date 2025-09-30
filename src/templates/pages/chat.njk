@@ -1,0 +1,44 @@
+{% extends "layouts/default.njk" %}
+{% block pageTitle %}Chat Interface{% endblock %}
+{% block content %}
+    <div class="govuk-width-container">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
+                <h1 class="govuk-heading-xl">Chat Interface</h1>
+                <div class="govuk-inset-text">
+                    <p>Welcome! How can I help you today?</p>
+                </div>
+                <div class="govuk-form-group">
+                    <label class="govuk-label" for="message-input">
+                        Your message
+                    </label>
+                    <textarea
+                        class="govuk-textarea"
+                        id="message-input"
+                        name="message"
+                        rows="3"
+                        placeholder="Type your message here..."
+                        required="required"></textarea>
+                </div>
+                <button type="button" class="govuk-button" data-module="govuk-button" id="send-button">
+                    Send message
+                </button>
+                <div
+                    id="chat-messages" class="govuk-!-margin-top-6"><!-- Messages will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        // Basic chat functionality will be added in Phase 2
+        document.getElementById('send-button').addEventListener('click', function () {
+            const message = document.getElementById('message-input').value;
+            if (message.trim()) {
+                console.log('Message:', message);
+                // TODO: Implement message sending in Phase 2
+            }
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{
+    "name": "govuk-chat-frontend",
+    "version": "1.0.0",
+    "description": "GOV.UK Frontend Chat Interface",
+    "main": "dist/server/index.js",
+    "scripts": {
+        "build": "npm run build:css && tsc",
+        "build:css": "sass src/scss/application.scss public/css/application.css",
+        "start": "node dist/server/index.js",
+        "dev": "npm run build:css && nodemon --exec ts-node src/server/index.ts",
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "lint": "eslint src/**/*.ts",
+        "lint:fix": "eslint src/**/*.ts --fix",
+        "format": "prettier --write src/**/*.ts",
+        "type-check": "tsc --noEmit",
+        "prepare": "husky"
+    },
+    "keywords": [
+        "govuk",
+        "chat",
+        "frontend",
+        "hapi",
+        "typescript"
+    ],
+    "author": "GOV.UK",
+    "license": "MIT",
+    "dependencies": {
+        "@hapi/hapi": "^21.2.0",
+        "@hapi/inert": "^7.1.0",
+        "@hapi/joi": "^17.1.1",
+        "@hapi/vision": "^7.0.0",
+        "dotenv": "^16.4.0",
+        "govuk-frontend": "^5.12.0",
+        "helmet": "^7.1.0",
+        "nunjucks": "^3.2.4"
+    },
+    "devDependencies": {
+        "@types/jest": "^29.0.0",
+        "@types/node": "^22.0.0",
+        "@types/nunjucks": "^3.2.0",
+        "@typescript-eslint/eslint-plugin": "^6.21.0",
+        "@typescript-eslint/parser": "^6.21.0",
+        "eslint": "^8.57.0",
+        "husky": "^9.0.0",
+        "jest": "^29.0.0",
+        "lint-staged": "^15.2.0",
+        "nodemon": "^3.0.0",
+        "prettier": "^3.3.0",
+        "sass": "^1.93.2",
+        "ts-jest": "^29.0.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.5.0"
+    },
+    "lint-staged": {
+        "src/**/*.ts": [
+            "eslint --fix",
+            "prettier --write"
+        ]
+    }
+}
