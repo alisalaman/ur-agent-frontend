@@ -26,16 +26,23 @@
     "author": "GOV.UK",
     "license": "MIT",
     "dependencies": {
+        "@hapi/cookie": "^12.0.1",
         "@hapi/hapi": "^21.2.0",
         "@hapi/inert": "^7.1.0",
         "@hapi/joi": "^17.1.1",
         "@hapi/vision": "^7.0.0",
+        "@types/redis": "^4.0.11",
+        "@types/ws": "^8.18.1",
         "dotenv": "^16.4.0",
         "govuk-frontend": "^5.12.0",
         "helmet": "^7.1.0",
-        "nunjucks": "^3.2.4"
+        "nunjucks": "^3.2.4",
+        "redis": "^4.7.1",
+        "ws": "^8.18.3"
     },
     "devDependencies": {
+        "@types/hapi__cookie": "^12.0.5",
+        "@types/hapi__joi": "^17.1.15",
         "@types/jest": "^29.0.0",
         "@types/node": "^22.0.0",
         "@types/nunjucks": "^3.2.0",

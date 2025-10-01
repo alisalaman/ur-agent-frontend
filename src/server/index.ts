@@ -2,6 +2,7 @@ import Hapi from '@hapi/hapi';
 import { appConfig } from './config';
 import { registerPlugins } from './plugins';
 import { registerRoutes } from './routes';
+import './types/server';
 
 async function createServer(): Promise<Hapi.Server> {
   const server = Hapi.server({

@@ -2,6 +2,8 @@ import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
 import path from 'path';
+import { sessionPlugin } from './session';
+import { websocketPlugin } from './websocket';
 
 export async function registerPlugins(server: Hapi.Server): Promise<void> {
   // Register Inert first
@@ -9,6 +11,12 @@ export async function registerPlugins(server: Hapi.Server): Promise<void> {
 
   // Register Vision
   await server.register(Vision);
+
+  // Register session plugin
+  await server.register(sessionPlugin);
+
+  // Register WebSocket plugin
+  await server.register(websocketPlugin);
 
   // Configure views after Vision is registered
   const templatesPath = path.join(__dirname, '../../templates');
