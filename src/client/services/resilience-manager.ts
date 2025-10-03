@@ -1,5 +1,12 @@
 import { WebSocketService } from './websocket-service';
-import { logger } from '../../server/utils/logging';
+
+// Simple logger for client-side
+const logger = {
+  info: (message: string) => console.log(`[INFO] ${message}`),
+  error: (message: string) => console.error(`[ERROR] ${message}`),
+  warn: (message: string) => console.warn(`[WARN] ${message}`),
+  debug: (message: string) => console.debug(`[DEBUG] ${message}`),
+};
 
 export class ResilienceManager {
   private wsService: WebSocketService;
@@ -48,7 +55,7 @@ export class ResilienceManager {
   }
 
   private handleError(error: Error): void {
-    logger.error('WebSocket error', { error: error.message });
+    logger.error(`WebSocket error: ${error.message}`);
 
     if (this.retryAttempts < this.maxRetryAttempts) {
       this.scheduleReconnect();
@@ -83,7 +90,7 @@ export class ResilienceManager {
 
   private queueMessage(message: any): void {
     this.messageQueue.push(message);
-    logger.info('Message queued for later delivery', { queueSize: this.messageQueue.length });
+    logger.info(`Message queued for later delivery. Queue size: ${this.messageQueue.length}`);
   }
 
   private async processQueuedMessages(): Promise<void> {
@@ -101,9 +108,11 @@ export class ResilienceManager {
       try {
         this.wsService.sendMessage(message.content, message.metadata);
         logger.info('Queued message sent successfully');
-      } catch (error) {
+      } catch (error: unknown) {
         this.messageQueue.push(message);
-        logger.error('Failed to send queued message', { error: error.message });
+        logger.error(
+          `Failed to send queued message: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
   }
