@@ -8,7 +8,7 @@
         ],
         "outDir": "./public/js",
         "rootDir": "./src/client",
-        "baseUrl": "./src/client",
+        "baseUrl": ".",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
@@ -27,12 +27,14 @@
         "moduleResolution": "node"
     },
     "include": [
-        "src/client/**/*"
+        "src/client/**/*.ts"
     ],
     "exclude": [
         "node_modules",
         "dist",
         "tests",
-        "src/server/**/*"
+        "src/server",
+        "src/server/**/*",
+        "**/server/**/*"
     ]
 }
