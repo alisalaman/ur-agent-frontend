@@ -8,7 +8,7 @@
         ],
         "outDir": "./public/js",
         "rootDir": "./src/client",
-        "baseUrl": ".",
+        "baseUrl": "./src/client",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
