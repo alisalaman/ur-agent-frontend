@@ -7,6 +7,9 @@ export const healthRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/health',
+      options: {
+        auth: false,
+      },
       handler: async (_request, h) => {
         const healthCheckService = server.app.healthCheckService;
         const health = await healthCheckService.getSystemHealth();
@@ -19,6 +22,9 @@ export const healthRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/health/detailed',
+      options: {
+        auth: false,
+      },
       handler: async (_request, h) => {
         const healthCheckService = server.app.healthCheckService;
         const degradationService = server.app.degradationService;
@@ -43,6 +49,9 @@ export const healthRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/metrics',
+      options: {
+        auth: false,
+      },
       handler: async (_request, h) => {
         const metricsService = server.app.metricsService;
         const metrics = await metricsService.getMetrics();
@@ -55,6 +64,9 @@ export const healthRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/ready',
+      options: {
+        auth: false,
+      },
       handler: async (_request, h) => {
         const degradationService = server.app.degradationService;
         const level = degradationService.getCurrentLevel();
@@ -71,6 +83,9 @@ export const healthRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/live',
+      options: {
+        auth: false,
+      },
       handler: (_request, h) => {
         return h.response({ status: 'alive', uptime: process.uptime() });
       },

@@ -14,7 +14,7 @@ export const resiliencePlugin: Hapi.Plugin<{}> = {
     const metricsService = new MetricsService();
 
     // Get WebSocket service from server
-    const wsService = server.app.wsService;
+    const wsService = (server as any).wsService;
     const healthCheckService = new HealthCheckService(wsService);
 
     // Register health checks

@@ -7,6 +7,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/css/{param*}',
+      options: {
+        auth: false,
+      },
       handler: {
         directory: {
           path: path.join(__dirname, '../../../public/css'),
@@ -18,6 +21,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/css/govuk-frontend.css',
+      options: {
+        auth: false,
+      },
       handler: {
         file: {
           path: path.join(
@@ -31,6 +37,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/js/{param*}',
+      options: {
+        auth: false,
+      },
       handler: {
         directory: {
           path: path.join(__dirname, '../../../public/js'),
@@ -42,6 +51,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/js/govuk-frontend.js',
+      options: {
+        auth: false,
+      },
       handler: {
         file: {
           path: path.join(
@@ -55,6 +67,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/images/{param*}',
+      options: {
+        auth: false,
+      },
       handler: {
         directory: {
           path: path.join(__dirname, '../../../public/images'),
@@ -66,6 +81,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/assets/{param*}',
+      options: {
+        auth: false,
+      },
       handler: {
         directory: {
           path: path.join(__dirname, '../../../node_modules/govuk-frontend/dist/govuk/assets'),
@@ -76,6 +94,9 @@ export const staticRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/manifest.json',
+      options: {
+        auth: false,
+      },
       handler: {
         file: {
           path: path.join(__dirname, '../../../public/manifest.json'),

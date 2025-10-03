@@ -6,6 +6,9 @@ export const chatRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/',
+      options: {
+        auth: false,
+      },
       handler: (_request, h) => {
         return h.view('pages/index');
       },
@@ -14,6 +17,9 @@ export const chatRoutes: Hapi.Plugin<{}> = {
     server.route({
       method: 'GET',
       path: '/chat',
+      options: {
+        auth: false,
+      },
       handler: (_request, h) => {
         // Generate a temporary session ID and user ID for demo purposes
         const sessionId = Math.random().toString(36).substr(2, 9);
