@@ -1,6 +1,6 @@
 export interface WebSocketMessage {
   id: string;
-  type: 'message' | 'response' | 'error' | 'status';
+  type: 'message' | 'query' | 'response' | 'error' | 'status';
   content: string;
   timestamp: Date;
   metadata?: Record<string, any>;
