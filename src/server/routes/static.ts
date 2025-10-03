@@ -103,5 +103,18 @@ export const staticRoutes: Hapi.Plugin<{}> = {
         },
       },
     });
+
+    server.route({
+      method: 'GET',
+      path: '/favicon.ico',
+      options: {
+        auth: false,
+      },
+      handler: {
+        file: {
+          path: path.join(__dirname, '../../../public/favicon.ico'),
+        },
+      },
+    });
   },
 };
