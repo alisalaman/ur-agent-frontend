@@ -7,7 +7,7 @@
             "DOM"
         ],
         "outDir": "./public/js",
-        "rootDir": "./src/client",
+        "rootDir": "./src",
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
