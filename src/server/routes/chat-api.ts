@@ -1,5 +1,5 @@
 import Hapi from '@hapi/hapi';
-import Joi from 'joi';
+import Joi from '@hapi/joi';
 import { SessionService } from '../services/session-service';
 
 const messageSchema = Joi.object({
