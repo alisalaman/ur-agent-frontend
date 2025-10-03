@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
-import { WebSocketMessage, WebSocketConnection, WebSocketConfig } from '../types/websocket';
-import { WebSocketNotConnectedError, WebSocketConnectionError } from '../types/errors';
-import { withExponentialBackoff, retryConfigs } from '../utils/retry';
+import { WebSocketMessage, WebSocketConnection, WebSocketConfig } from 'src/client/types/websocket';
+import { WebSocketNotConnectedError, WebSocketConnectionError } from 'src/client/types/errors';
+import { withExponentialBackoff, retryConfigs } from 'src/client/utils/retry';
 
 /**
  * WebSocket service for real-time communication with AI agents
