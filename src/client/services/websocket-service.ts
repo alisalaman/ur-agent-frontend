@@ -1,9 +1,7 @@
-import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 import { WebSocketMessage, WebSocketConnection, WebSocketConfig } from '../types/websocket';
-import { WebSocketNotConnectedError, WebSocketConnectionError } from '../../server/types/errors';
-import { withRetry, withExponentialBackoff } from '../../server/utils/retry';
-import { retryConfigs } from '../../server/config/retry';
+import { WebSocketNotConnectedError, WebSocketConnectionError } from '../types/errors';
+import { withExponentialBackoff, retryConfigs } from '../utils/retry';
 
 /**
  * WebSocket service for real-time communication with AI agents
@@ -33,7 +31,7 @@ export class WebSocketService extends EventEmitter {
    * @throws {Error} If connection fails
    */
   async connect(sessionId: string, userId: string): Promise<void> {
-    const retryableConnect = withExponentialBackoff(
+    const retryableConnect = await withExponentialBackoff(
       this.establishConnection.bind(this),
       retryConfigs.websocket
     );
@@ -53,29 +51,23 @@ export class WebSocketService extends EventEmitter {
           retryCount: 0,
         };
 
-        this.ws = new WebSocket(this.config.url, {
-          headers: {
-            'X-Session-ID': sessionId,
-            'X-User-ID': userId,
-          },
-          handshakeTimeout: this.config.timeout,
-        });
+        this.ws = new WebSocket(this.config.url);
 
         this.setupEventHandlers();
 
-        this.ws.on('open', () => {
+        this.ws.onopen = () => {
           this.connection!.status = 'connected';
           this.connection!.retryCount = 0;
           this.startHeartbeat();
           this.emit('connected', this.connection);
           resolve();
-        });
+        };
 
-        this.ws.on('error', (error) => {
+        this.ws.onerror = (error) => {
           this.connection!.status = 'error';
           this.emit('error', error);
-          reject(new WebSocketConnectionError(`WebSocket connection failed: ${error.message}`));
-        });
+          reject(new WebSocketConnectionError(`WebSocket connection failed: ${error}`));
+        };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         reject(new WebSocketConnectionError(`WebSocket setup failed: ${errorMessage}`));
@@ -86,28 +78,28 @@ export class WebSocketService extends EventEmitter {
   private setupEventHandlers(): void {
     if (!this.ws) return;
 
-    this.ws.on('message', (data: WebSocket.Data) => {
+    this.ws.onmessage = (event: MessageEvent) => {
       try {
-        const message: WebSocketMessage = JSON.parse(data.toString());
+        const message: WebSocketMessage = JSON.parse(event.data);
         this.connection!.lastActivity = new Date();
         this.emit('message', message);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.emit('error', new Error(`Failed to parse WebSocket message: ${errorMessage}`));
       }
-    });
+    };
 
-    this.ws.on('close', (code: number, reason: string) => {
+    this.ws.onclose = (event: CloseEvent) => {
       this.connection!.status = 'disconnected';
       this.stopHeartbeat();
-      this.emit('disconnected', { code, reason });
+      this.emit('disconnected', { code: event.code, reason: event.reason });
       this.handleReconnection();
-    });
+    };
 
-    this.ws.on('error', (error: Error) => {
+    this.ws.onerror = (error: Event) => {
       this.connection!.status = 'error';
       this.emit('error', error);
-    });
+    };
   }
 
   /**
@@ -121,36 +113,28 @@ export class WebSocketService extends EventEmitter {
       throw new WebSocketNotConnectedError();
     }
 
-    const retryableSend = withRetry(this.performSend.bind(this), retryConfigs.websocket);
-
-    retryableSend(content, metadata).catch((error) => {
-      this.emit('error', new Error(`Failed to send message: ${error.message}`));
-    });
+    try {
+      this.performSend(content, metadata);
+    } catch (error) {
+      this.emit('error', new Error(`Failed to send message: ${error}`));
+    }
   }
 
-  private async performSend(content: string, metadata?: Record<string, any>): Promise<void> {
+  private performSend(content: string, metadata?: Record<string, any>): void {
     if (!this.ws || this.connection?.status !== 'connected') {
       throw new WebSocketNotConnectedError();
     }
 
     const message: WebSocketMessage = {
       id: this.generateId(),
-      type: 'message',
+      type: 'query',
       content,
       timestamp: new Date(),
       metadata: metadata || {},
     };
 
-    return new Promise((resolve, reject) => {
-      this.ws!.send(JSON.stringify(message), (error) => {
-        if (error) {
-          reject(error);
-        } else {
-          this.connection!.lastActivity = new Date();
-          resolve();
-        }
-      });
-    });
+    this.ws.send(JSON.stringify(message));
+    this.connection!.lastActivity = new Date();
   }
 
   private handleReconnection(): void {
@@ -172,7 +156,8 @@ export class WebSocketService extends EventEmitter {
   private startHeartbeat(): void {
     this.heartbeatTimer = setInterval(() => {
       if (this.ws && this.connection?.status === 'connected') {
-        this.ws.ping();
+        // Browser WebSocket doesn't have ping method, send a ping message instead
+        this.ws.send(JSON.stringify({ type: 'ping' }));
       }
     }, this.config.heartbeatInterval);
   }

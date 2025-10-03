@@ -1,5 +1,5 @@
 import { WebSocketService } from '../services/websocket-service';
-import { ChatMessage } from '../../server/types/session';
+import { ChatMessage } from '../types/session';
 
 export class ChatWindow {
   private container: HTMLElement;
