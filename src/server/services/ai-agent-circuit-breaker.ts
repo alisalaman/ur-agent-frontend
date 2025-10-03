@@ -29,7 +29,7 @@ export class AIAgentCircuitBreaker {
     } catch (error) {
       if (this.breaker.state === 'open') {
         logger.warn('AI Agent circuit breaker is open, using fallback', {
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           content: content.substring(0, 100),
         });
         return this.getFallbackResponse(content);
