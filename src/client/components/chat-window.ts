@@ -51,7 +51,24 @@ export class ChatWindow {
       // Only connect if WebSocket URL is provided and not a placeholder
       const wsUrl = (this.wsService as any).config?.url;
       if (this.wsService && wsUrl && !wsUrl.includes('localhost:8080') && wsUrl !== 'demo-mode') {
-        await this.wsService.connect(this.sessionId, this.userId);
+        // Set a timeout for WebSocket connection attempts
+        const connectionTimeout = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Connection timeout')), 5000); // 5 second timeout
+        });
+
+        try {
+          await Promise.race([
+            this.wsService.connect(this.sessionId, this.userId),
+            connectionTimeout,
+          ]);
+        } catch (connectionError) {
+          console.warn(
+            'WebSocket connection failed or timed out, falling back to demo mode:',
+            connectionError
+          );
+          this.handleConnected(); // Fall back to demo mode
+          return;
+        }
       } else {
         // Demo mode - simulate connection
         this.handleConnected();
@@ -125,7 +142,20 @@ export class ChatWindow {
   }
 
   private handleConnected(): void {
-    this.updateStatus('connected', 'Connected');
+    // Check if we're in demo mode (no actual WebSocket connection)
+    const wsUrl = (this.wsService as any).config?.url;
+    const isDemoMode =
+      !wsUrl ||
+      wsUrl.includes('localhost:8080') ||
+      wsUrl === 'demo-mode' ||
+      !this.wsService.getConnectionStatus() ||
+      this.wsService.getConnectionStatus()?.status !== 'connected';
+
+    if (isDemoMode) {
+      this.updateStatus('demo', 'Demo Mode - Simulated Responses');
+    } else {
+      this.updateStatus('connected', 'Connected');
+    }
     this.sendButton.disabled = false;
   }
 
@@ -147,7 +177,21 @@ export class ChatWindow {
   }
 
   private handleError(error: Error): void {
-    this.showError(`Connection error: ${error.message}`);
+    console.error('WebSocket error:', error);
+
+    // Check if this is a connection error that should trigger fallback to demo mode
+    if (
+      error.message.includes('Connection timeout') ||
+      error.message.includes('WebSocket connection failed') ||
+      error.message.includes('Failed to fetch')
+    ) {
+      this.showError(
+        'AI agent is currently unavailable. Running in demo mode with simulated responses.'
+      );
+      this.handleConnected(); // Fall back to demo mode
+    } else {
+      this.showError(`Connection error: ${error.message}`);
+    }
   }
 
   private addMessageToUI(message: ChatMessage): void {
