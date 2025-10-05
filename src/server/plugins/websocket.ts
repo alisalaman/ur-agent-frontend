@@ -5,11 +5,11 @@ export const websocketPlugin: Hapi.Plugin<{}> = {
   name: 'websocket',
   register: async (server: Hapi.Server): Promise<void> => {
     const wsService = new WebSocketService({
-      url: process.env.AI_AGENT_WS_URL || 'ws://localhost:8080/ws',
-      reconnectAttempts: 1,
-      reconnectDelay: 1000,
+      url: process.env.AI_AGENT_WS_URL || 'wss://ur-agent.onrender.com/ws/synthetic-agents',
+      reconnectAttempts: 3,
+      reconnectDelay: 2000,
       heartbeatInterval: 30000,
-      timeout: 2000,
+      timeout: 5000,
     });
 
     // Make WebSocket service available to routes
