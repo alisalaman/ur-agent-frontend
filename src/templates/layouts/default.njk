@@ -6,7 +6,7 @@
             {% block pageTitle %}
                 {% if title %}
                     {{ title }} -
-                {% endif %}Chat Interface - GOV.UK{% endblock %}
+                {% endif %}Research agent - GOV.UK{% endblock %}
         </title>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#1d70b8">
@@ -108,9 +108,10 @@
                     </div>
                 </footer>
             {% endblock %}
+            {% block scripts %}{% endblock %}
             {% block bodyEnd %}
                 <script src="/js/govuk-frontend.js"></script>
-                <script src="/js/application.js"></script>
+                <script type="module" src="/js/application.js"></script>
             {% endblock %}
         </body>
     </html>
