@@ -55,14 +55,14 @@ class SimpleChatWindow {
         this.connect();
     }
 
-  initializeElements() {
-    this.messagesContainer = this.container.querySelector('#chat-messages');
-    this.inputForm = this.container.querySelector('#chat-form');
-    this.messageInput = this.container.querySelector('#message-input');
-    this.sendButton = this.container.querySelector('button[type="submit"]');
-    // The status indicator is outside the chat container, so look in document
-    this.statusIndicator = document.querySelector('#connection-status');
-  }
+    initializeElements() {
+        this.messagesContainer = this.container.querySelector('#chat-messages');
+        this.inputForm = this.container.querySelector('#chat-form');
+        this.messageInput = this.container.querySelector('#message-input');
+        this.sendButton = this.container.querySelector('button[type="submit"]');
+        // The status indicator is outside the chat container, so look in document
+        this.statusIndicator = document.querySelector('#connection-status');
+    }
 
     setupEventListeners() {
         this.inputForm.addEventListener('submit', this.handleSubmit.bind(this));
@@ -82,6 +82,7 @@ class SimpleChatWindow {
             console.log('Simple ChatWindow: Connection failed, using demo mode:', error);
             this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
             this.sendButton.disabled = false;
+            this.messageInput.disabled = false;
         }
     }
 
@@ -89,12 +90,14 @@ class SimpleChatWindow {
         console.log('Simple ChatWindow: Connected');
         this.updateStatus('connected', 'Connected');
         this.sendButton.disabled = false;
+        this.messageInput.disabled = false;
     }
 
     handleDisconnected() {
         console.log('Simple ChatWindow: Disconnected');
         this.updateStatus('disconnected', 'Disconnected');
         this.sendButton.disabled = true;
+        this.messageInput.disabled = true;
     }
 
     handleMessage(message) {
@@ -102,11 +105,12 @@ class SimpleChatWindow {
         this.addMessage(message.content, 'assistant');
     }
 
-    handleError(error) {
-        console.log('Simple ChatWindow: Error occurred:', error);
-        this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
-        this.sendButton.disabled = false;
-    }
+  handleError(error) {
+    console.log('Simple ChatWindow: Error occurred:', error);
+    this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+    this.sendButton.disabled = false;
+    this.messageInput.disabled = false;
+  }
 
     updateStatus(status, message) {
         this.statusIndicator.className = `govuk-chat-status govuk-chat-status--${status}`;
