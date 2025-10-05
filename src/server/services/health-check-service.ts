@@ -86,9 +86,11 @@ export class HealthCheckService {
         process.env.AI_AGENT_WS_URL || 'wss://ur-agent.onrender.com/ws/synthetic-agents';
 
       // Test if the WebSocket endpoint is reachable by making an HTTP request to the health endpoint
+      // For Render services, remove port numbers from URLs
       const healthUrl = wsUrl
         .replace('wss://', 'https://')
-        .replace('/ws/synthetic-agents', '/health');
+        .replace('/ws/synthetic-agents', '/health')
+        .replace(':10000', ''); // Remove port for Render services
 
       try {
         const controller = new AbortController();
@@ -122,7 +124,8 @@ export class HealthCheckService {
         process.env.AI_AGENT_WS_URL || 'wss://ur-agent.onrender.com/ws/synthetic-agents';
       const healthUrl = wsUrl
         .replace('wss://', 'https://')
-        .replace('/ws/synthetic-agents', '/health');
+        .replace('/ws/synthetic-agents', '/health')
+        .replace(':10000', ''); // Remove port for Render services
 
       try {
         const controller = new AbortController();
