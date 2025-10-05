@@ -44,9 +44,16 @@ export class ChatWindow {
             // Only connect if WebSocket URL is provided and not a placeholder
             const wsUrl = this.wsService.config?.url;
             if (this.wsService && wsUrl && !wsUrl.includes('localhost:8080') && wsUrl !== 'demo-mode') {
+                // Check if this is a known problematic URL and skip connection attempt
+                if (wsUrl.includes('ur-agent.onrender.com')) {
+                    console.warn('AI agent service is known to be unstable, switching to demo mode immediately');
+                    this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+                    this.sendButton.disabled = false;
+                    return;
+                }
                 // Set a timeout for WebSocket connection attempts
                 const connectionTimeout = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Connection timeout')), 2000); // 2 second timeout
+                    setTimeout(() => reject(new Error('Connection timeout')), 1000); // 1 second timeout
                 });
                 try {
                     await Promise.race([
