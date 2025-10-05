@@ -27,14 +27,15 @@ export class GracefulDegradationService {
   async assessSystemHealth(): Promise<DegradationLevel> {
     const healthStatus = await this.checkAllServices();
 
-    if (healthStatus.websocket && healthStatus.aiAgent && healthStatus.sessionStorage) {
+    // Check if core services are available (redis, websocket, aiAgent)
+    if (healthStatus.redis && healthStatus.websocket && healthStatus.aiAgent) {
       this.currentLevel = {
         level: 'full',
         description: 'All services operational',
         features: ['websocket', 'ai-agent', 'session-storage', 'real-time'],
         fallbackActions: {},
       };
-    } else if (healthStatus.sessionStorage && (healthStatus.websocket || healthStatus.aiAgent)) {
+    } else if (healthStatus.redis && (healthStatus.websocket || healthStatus.aiAgent)) {
       this.currentLevel = {
         level: 'limited',
         description: 'Limited functionality - some services unavailable',

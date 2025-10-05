@@ -92,6 +92,11 @@ export class HealthCheckService {
         .replace('/ws/synthetic-agents', '/health')
         .replace(':10000', ''); // Remove port for Render services
 
+      logger.debug('WebSocket health check URL construction', {
+        originalWsUrl: wsUrl,
+        constructedHealthUrl: healthUrl,
+      });
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -126,6 +131,11 @@ export class HealthCheckService {
         .replace('wss://', 'https://')
         .replace('/ws/synthetic-agents', '/health')
         .replace(':10000', ''); // Remove port for Render services
+
+      logger.debug('AI Agent health check URL construction', {
+        originalWsUrl: wsUrl,
+        constructedHealthUrl: healthUrl,
+      });
 
       try {
         const controller = new AbortController();
