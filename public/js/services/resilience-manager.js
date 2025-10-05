@@ -61,7 +61,7 @@ export class ResilienceManager {
     sendMessage(content, metadata) {
         if (this.wsService.getConnectionStatus()?.status === 'connected') {
             try {
-                this.wsService.sendMessage(content, metadata);
+                this.wsService.sendMessage(content);
             }
             catch (error) {
                 this.queueMessage({ content, metadata, timestamp: new Date() });
@@ -84,7 +84,7 @@ export class ResilienceManager {
         this.messageQueue = [];
         for (const message of messages) {
             try {
-                this.wsService.sendMessage(message.content, message.metadata);
+                this.wsService.sendMessage(message.content);
                 logger.info('Queued message sent successfully');
             }
             catch (error) {

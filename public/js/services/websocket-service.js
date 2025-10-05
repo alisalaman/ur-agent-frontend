@@ -90,30 +90,28 @@ export class WebSocketService extends EventEmitter {
     /**
      * Sends a message through the WebSocket connection with retry logic
      * @param content - Message content to send
-     * @param metadata - Optional metadata to include with the message
      * @throws {WebSocketNotConnectedError} If WebSocket is not connected
      */
-    sendMessage(content, metadata) {
+    sendMessage(content) {
         if (!this.ws || this.connection?.status !== 'connected') {
             throw new WebSocketNotConnectedError();
         }
         try {
-            this.performSend(content, metadata);
+            this.performSend(content);
         }
         catch (error) {
             this.emit('error', new Error(`Failed to send message: ${error}`));
         }
     }
-    performSend(content, metadata) {
+    performSend(content) {
         if (!this.ws || this.connection?.status !== 'connected') {
             throw new WebSocketNotConnectedError();
         }
+        // Format message according to backend expectations
         const message = {
-            id: this.generateId(),
             type: 'query',
-            content,
-            timestamp: new Date(),
-            metadata: metadata || {},
+            query: content,
+            persona_type: 'query_all',
         };
         this.ws.send(JSON.stringify(message));
         this.connection.lastActivity = new Date();

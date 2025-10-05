@@ -23,9 +23,9 @@ export class AIAgentCircuitBreaker {
     });
   }
 
-  async sendMessage(content: string, metadata?: Record<string, any>): Promise<any> {
+  async sendMessage(content: string): Promise<any> {
     try {
-      return await this.breaker.fire(content, metadata);
+      return await this.breaker.fire(content);
     } catch (error) {
       if (this.breaker.state === 'open') {
         logger.warn('AI Agent circuit breaker is open, using fallback', {
@@ -38,13 +38,13 @@ export class AIAgentCircuitBreaker {
     }
   }
 
-  private async callAIAgent(content: string, metadata?: Record<string, any>): Promise<any> {
+  private async callAIAgent(content: string): Promise<any> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error('AI Agent request timeout'));
       }, 8000);
 
-      this.wsService.sendMessage(content, metadata);
+      this.wsService.sendMessage(content);
 
       const messageHandler = (message: any) => {
         clearTimeout(timeout);

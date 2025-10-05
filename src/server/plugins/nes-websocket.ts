@@ -2,10 +2,12 @@ import Hapi from '@hapi/hapi';
 import Nes from '@hapi/nes';
 
 interface WebSocketMessage {
-  id: string;
+  id?: string;
   type: string;
-  content: string;
-  timestamp: Date;
+  content?: string;
+  query?: string;
+  persona_type?: string;
+  timestamp?: Date;
   metadata?: Record<string, unknown>;
 }
 
@@ -108,7 +110,11 @@ export const nesWebSocketPlugin: Hapi.Plugin<{}> = {
  * Handles chat queries with mock AI responses
  */
 async function handleChatQuery(message: WebSocketMessage): Promise<WebSocketMessage> {
-  const query = message.content.toLowerCase();
+  // Extract query content from either 'query' or 'content' field for backward compatibility
+  const queryContent = message.query || message.content || '';
+  const query = queryContent.toLowerCase();
+  const personaType = message.persona_type || 'query_all';
+
   let response = '';
 
   // Simple mock responses based on query content
@@ -141,7 +147,8 @@ async function handleChatQuery(message: WebSocketMessage): Promise<WebSocketMess
     content: response,
     timestamp: new Date(),
     metadata: {
-      originalQuery: message.content,
+      originalQuery: queryContent,
+      personaType: personaType,
       processingTime: Math.random() * 1000 + 500,
     },
   };
