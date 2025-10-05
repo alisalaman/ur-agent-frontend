@@ -1,14 +1,10 @@
 import { createClient, RedisClientType } from 'redis';
-import { WebSocketService } from '../../client/services/websocket-service';
 import { logger } from '../utils/logging';
 
 export class HealthCheckService {
   private redis: RedisClientType | null = null;
-  private wsService: WebSocketService;
 
-  constructor(wsService: WebSocketService) {
-    this.wsService = wsService;
-
+  constructor() {
     // Only create Redis client if REDIS_URL is provided
     if (process.env.REDIS_URL) {
       logger.info('Redis URL configured', { url: process.env.REDIS_URL });
@@ -84,8 +80,34 @@ export class HealthCheckService {
 
   async checkWebSocket(): Promise<boolean> {
     try {
-      const connection = this.wsService.getConnectionStatus();
-      return connection?.status === 'connected';
+      // For server-side health checks, we need to test the WebSocket endpoint directly
+      // since the client-side WebSocket service isn't connected
+      const wsUrl =
+        process.env.AI_AGENT_WS_URL || 'wss://ur-agent.onrender.com/ws/synthetic-agents';
+
+      // Test if the WebSocket endpoint is reachable by making an HTTP request to the health endpoint
+      const healthUrl = wsUrl
+        .replace('wss://', 'https://')
+        .replace('/ws/synthetic-agents', '/health');
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const response = await fetch(healthUrl, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        return response.ok;
+      } catch (fetchError) {
+        logger.warn('WebSocket health check failed - endpoint not reachable', {
+          error: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+          url: healthUrl,
+        });
+        return false;
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('WebSocket health check failed', { error: errorMessage });
@@ -95,9 +117,31 @@ export class HealthCheckService {
 
   async checkAIAgent(): Promise<boolean> {
     try {
-      // Send a ping message to AI agent
-      this.wsService.sendMessage('ping', { type: 'health-check' });
-      return true;
+      // For server-side health checks, test the AI agent HTTP endpoint
+      const wsUrl =
+        process.env.AI_AGENT_WS_URL || 'wss://ur-agent.onrender.com/ws/synthetic-agents';
+      const healthUrl = wsUrl
+        .replace('wss://', 'https://')
+        .replace('/ws/synthetic-agents', '/health');
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const response = await fetch(healthUrl, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        return response.ok;
+      } catch (fetchError) {
+        logger.warn('AI Agent health check failed - endpoint not reachable', {
+          error: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+          url: healthUrl,
+        });
+        return false;
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('AI Agent health check failed', { error: errorMessage });
