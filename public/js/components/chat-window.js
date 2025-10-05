@@ -50,7 +50,7 @@ export class ChatWindow {
                 try {
                     await Promise.race([
                         this.wsService.connect(this.sessionId, this.userId),
-                        connectionTimeout
+                        connectionTimeout,
                     ]);
                 }
                 catch (connectionError) {
@@ -126,7 +126,9 @@ export class ChatWindow {
     handleConnected() {
         // Check if we're in demo mode (no actual WebSocket connection)
         const wsUrl = this.wsService.config?.url;
-        const isDemoMode = !wsUrl || wsUrl.includes('localhost:8080') || wsUrl === 'demo-mode' ||
+        const isDemoMode = !wsUrl ||
+            wsUrl.includes('localhost:8080') ||
+            wsUrl === 'demo-mode' ||
             !this.wsService.getConnectionStatus() ||
             this.wsService.getConnectionStatus()?.status !== 'connected';
         if (isDemoMode) {

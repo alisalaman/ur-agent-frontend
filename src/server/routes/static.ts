@@ -116,5 +116,18 @@ export const staticRoutes: Hapi.Plugin<{}> = {
         },
       },
     });
+
+    // Handle source map requests gracefully
+    server.route({
+      method: 'GET',
+      path: '/js/{filename}.map',
+      options: {
+        auth: false,
+      },
+      handler: (_request, h) => {
+        // Return 404 for source map requests since we don't need them in production
+        return h.response().code(404);
+      },
+    });
   },
 };
