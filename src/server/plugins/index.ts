@@ -23,7 +23,8 @@ export async function registerPlugins(server: Hapi.Server): Promise<void> {
   await server.register(resiliencePlugin);
 
   // Configure views after Vision is registered
-  const templatesPath = path.join(__dirname, '../../templates');
+  // From dist/server/plugins, go up to project root, then into src/templates
+  const templatesPath = path.join(__dirname, '../../../src/templates');
   const govukTemplatesPath = path.join(
     __dirname,
     '../../../node_modules/govuk-frontend/dist/govuk'
