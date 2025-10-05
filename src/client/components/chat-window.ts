@@ -51,6 +51,9 @@ export class ChatWindow {
       // In Phase 2, WebSocket connection is optional for demo purposes
       // Only connect if WebSocket URL is provided and not a placeholder
       const wsUrl = (this.wsService as any).config?.url;
+      console.log('Chat window WebSocket URL:', wsUrl);
+      console.log('WebSocket service config:', (this.wsService as any).config);
+
       if (this.wsService && wsUrl && !wsUrl.includes('localhost:8080') && wsUrl !== 'demo-mode') {
         // Try to connect to the AI agent service
         console.log('Attempting to connect to AI agent service:', wsUrl);
@@ -150,12 +153,18 @@ export class ChatWindow {
   private handleConnected(): void {
     // Check if we're in demo mode (no actual WebSocket connection)
     const wsUrl = (this.wsService as any).config?.url;
+    const connectionStatus = this.wsService.getConnectionStatus();
+    console.log('handleConnected - wsUrl:', wsUrl);
+    console.log('handleConnected - connectionStatus:', connectionStatus);
+
     const isDemoMode =
       !wsUrl ||
       wsUrl.includes('localhost:8080') ||
       wsUrl === 'demo-mode' ||
-      !this.wsService.getConnectionStatus() ||
-      this.wsService.getConnectionStatus()?.status !== 'connected';
+      !connectionStatus ||
+      connectionStatus?.status !== 'connected';
+
+    console.log('handleConnected - isDemoMode:', isDemoMode);
 
     if (isDemoMode) {
       this.updateStatus('demo', 'Demo Mode - Simulated Responses');
