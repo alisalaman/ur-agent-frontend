@@ -24,7 +24,7 @@ export const chatRoutes: Hapi.Plugin<{}> = {
         // Generate a temporary session ID and user ID for demo purposes
         const sessionId = Math.random().toString(36).substr(2, 9);
         const userId = 'demo-user';
-        // In Phase 2, disable WebSocket connection for demo mode
+        // Use the same server for WebSocket connections
         const wsUrl = process.env.AI_AGENT_WS_URL || 'demo-mode';
 
         return h.view('pages/chat', {

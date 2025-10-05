@@ -22,7 +22,7 @@ export class ConfigValidator {
     }
 
     // Check optional but recommended environment variables
-    const optionalEnvVars = ['REDIS_URL', 'WEBSOCKET_URL', 'AI_AGENT_URL'];
+    const optionalEnvVars = ['REDIS_URL', 'AI_AGENT_URL'];
 
     for (const envVar of optionalEnvVars) {
       if (!process.env[envVar]) {
@@ -31,7 +31,10 @@ export class ConfigValidator {
     }
 
     // Validate log level
-    if (process.env.LOG_LEVEL && !LOG_LEVELS.includes(process.env.LOG_LEVEL as any)) {
+    if (
+      process.env.LOG_LEVEL &&
+      !LOG_LEVELS.includes(process.env.LOG_LEVEL as (typeof LOG_LEVELS)[number])
+    ) {
       errors.push(
         `Invalid LOG_LEVEL: ${process.env.LOG_LEVEL}. Must be one of: ${LOG_LEVELS.join(', ')}`
       );
@@ -43,15 +46,6 @@ export class ConfigValidator {
         new URL(process.env.REDIS_URL);
       } catch (error) {
         errors.push(`Invalid REDIS_URL format: ${process.env.REDIS_URL}`);
-      }
-    }
-
-    // Validate WebSocket URL format if provided
-    if (process.env.WEBSOCKET_URL) {
-      try {
-        new URL(process.env.WEBSOCKET_URL);
-      } catch (error) {
-        errors.push(`Invalid WEBSOCKET_URL format: ${process.env.WEBSOCKET_URL}`);
       }
     }
 

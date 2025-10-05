@@ -34,5 +34,4 @@ export const LOG_LEVELS = ['error', 'warn', 'info', 'debug'] as const;
 export const DEGRADATION_LEVELS = ['full', 'limited', 'offline'] as const;
 
 export const DEFAULT_REDIS_URL = 'redis://localhost:6379';
-export const DEFAULT_WEBSOCKET_URL = 'ws://localhost:8080';
 export const DEFAULT_AI_AGENT_URL = 'http://localhost:3001';
