@@ -43,6 +43,8 @@ export const staticRoutes: Hapi.Plugin<{}> = {
       handler: {
         directory: {
           path: path.join(__dirname, '../../../public/js'),
+          index: false,
+          listing: false,
         },
       },
     });
