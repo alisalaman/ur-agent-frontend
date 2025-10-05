@@ -11,9 +11,13 @@ export class HealthCheckService {
 
     // Only create Redis client if REDIS_URL is provided
     if (process.env.REDIS_URL) {
+      logger.info('Redis URL configured', { url: process.env.REDIS_URL });
       try {
         this.redis = createClient({
           url: process.env.REDIS_URL,
+          socket: {
+            connectTimeout: 5000, // 5 second timeout
+          },
         });
 
         this.redis.on('error', (error) => {
@@ -21,6 +25,20 @@ export class HealthCheckService {
           this.redis = null; // Mark as unavailable
         });
 
+        this.redis.on('connect', () => {
+          logger.info('Redis connected successfully');
+        });
+
+        this.redis.on('ready', () => {
+          logger.info('Redis ready for commands');
+        });
+
+        this.redis.on('end', () => {
+          logger.warn('Redis connection ended');
+          this.redis = null;
+        });
+
+        // Try to connect
         this.redis.connect().catch((error) => {
           logger.warn('Redis connection failed', { error: error.message });
           this.redis = null; // Mark as unavailable
@@ -42,7 +60,19 @@ export class HealthCheckService {
     }
 
     try {
-      await this.redis.ping();
+      // Check if Redis is connected
+      if (!this.redis.isOpen) {
+        logger.warn('Redis client is not connected');
+        return false;
+      }
+
+      // Send ping with timeout
+      const result = await Promise.race([
+        this.redis.ping(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis ping timeout')), 3000)),
+      ]);
+
+      logger.debug('Redis ping successful', { result });
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
