@@ -26,19 +26,85 @@ class SimpleWebSocketService {
     async connect(sessionId, userId) {
         console.log('Simple WebSocket: Attempting to connect...');
 
-        // Simulate connection attempt
-        setTimeout(() => {
-            console.log('Simple WebSocket: Connection failed, using demo mode');
-            this.emit('error', new Error('Connection failed'));
-        }, 1000);
+        // Check if we have a valid WebSocket URL
+        if (!this.config.url || this.config.url === 'demo-mode') {
+            console.log('Simple WebSocket: No WebSocket URL configured, using demo mode');
+            this.emit('error', new Error('No WebSocket URL configured'));
+            return;
+        }
+
+        try {
+            console.log('Simple WebSocket: Connecting to', this.config.url);
+            this.ws = new WebSocket(this.config.url);
+
+            this.ws.onopen = () => {
+                console.log('Simple WebSocket: Connected successfully');
+                this.connected = true;
+                this.emit('connected', { sessionId, userId });
+            };
+
+            this.ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    console.log('Simple WebSocket: Message received', message);
+                    this.emit('message', message);
+                } catch (error) {
+                    console.error('Simple WebSocket: Failed to parse message', error);
+                }
+            };
+
+            this.ws.onclose = (event) => {
+                console.log('Simple WebSocket: Connection closed', event.code, event.reason);
+                this.connected = false;
+                this.emit('disconnected', { code: event.code, reason: event.reason });
+            };
+
+            this.ws.onerror = (error) => {
+                console.error('Simple WebSocket: Connection error', error);
+                this.connected = false;
+                this.emit('error', new Error('WebSocket connection failed'));
+            };
+
+        } catch (error) {
+            console.error('Simple WebSocket: Failed to create connection', error);
+            this.emit('error', new Error('Failed to create WebSocket connection'));
+        }
+    }
+
+    sendMessage(content, metadata = {}) {
+        if (!this.ws || !this.connected) {
+            throw new Error('WebSocket not connected');
+        }
+
+        const message = {
+            id: this.generateId(),
+            type: 'query',
+            content,
+            timestamp: new Date().toISOString(),
+            metadata
+        };
+
+        this.ws.send(JSON.stringify(message));
     }
 
     getConnectionStatus() {
-        return { status: 'disconnected' };
+        return {
+            status: this.connected ? 'connected' : 'disconnected',
+            connected: this.connected
+        };
     }
 
     disconnect() {
+        if (this.ws) {
+            this.ws.close();
+            this.ws = null;
+        }
+        this.connected = false;
         console.log('Simple WebSocket: Disconnected');
+    }
+
+    generateId() {
+        return Math.random().toString(36).substr(2, 9);
     }
 }
 
@@ -105,12 +171,12 @@ class SimpleChatWindow {
         this.addMessage(message.content, 'assistant');
     }
 
-  handleError(error) {
-    console.log('Simple ChatWindow: Error occurred:', error);
-    this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
-    this.sendButton.disabled = false;
-    this.messageInput.disabled = false;
-  }
+    handleError(error) {
+        console.log('Simple ChatWindow: Error occurred:', error);
+        this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+        this.sendButton.disabled = false;
+        this.messageInput.disabled = false;
+    }
 
     updateStatus(status, message) {
         this.statusIndicator.className = `govuk-chat-status govuk-chat-status--${status}`;
@@ -125,10 +191,23 @@ class SimpleChatWindow {
         this.addMessage(message, 'user');
         this.messageInput.value = '';
 
-        // Simulate AI response in demo mode
-        setTimeout(() => {
-            this.addMessage('This is a demo response. The AI agent is not available.', 'assistant');
-        }, 1000);
+        // Try to send via WebSocket if connected, otherwise show demo response
+        if (this.wsService.connected) {
+            try {
+                this.wsService.sendMessage(message, {
+                    sessionId: this.sessionId,
+                    userId: this.userId
+                });
+            } catch (error) {
+                console.error('Failed to send message via WebSocket:', error);
+                this.addMessage('Failed to send message. Please try again.', 'assistant');
+            }
+        } else {
+            // Demo mode response
+            setTimeout(() => {
+                this.addMessage('This is a demo response. The AI agent is not available.', 'assistant');
+            }, 1000);
+        }
     }
 
     handleKeyDown(event) {

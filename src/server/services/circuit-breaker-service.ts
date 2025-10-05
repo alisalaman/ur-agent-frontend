@@ -76,7 +76,6 @@ export class CircuitBreakerService {
     const breaker = this.breakers.get(name);
     return breaker
       ? {
-          state: breaker.state,
           stats: breaker.stats,
           name: breaker.name,
         }
@@ -85,7 +84,6 @@ export class CircuitBreakerService {
 
   getAllBreakerStats(): any[] {
     return Array.from(this.breakers.values()).map((breaker) => ({
-      state: breaker.state,
       stats: breaker.stats,
       name: breaker.name,
     }));
