@@ -20,6 +20,7 @@ export class ChatWindow {
         this.wsService = new WebSocketService(wsConfig);
         this.initializeElements();
         this.setupEventListeners();
+        this.updateStatus('connecting', 'Connecting...');
         this.connect();
     }
     initializeElements() {
@@ -45,7 +46,7 @@ export class ChatWindow {
             if (this.wsService && wsUrl && !wsUrl.includes('localhost:8080') && wsUrl !== 'demo-mode') {
                 // Set a timeout for WebSocket connection attempts
                 const connectionTimeout = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Connection timeout')), 5000); // 5 second timeout
+                    setTimeout(() => reject(new Error('Connection timeout')), 2000); // 2 second timeout
                 });
                 try {
                     await Promise.race([
@@ -55,7 +56,8 @@ export class ChatWindow {
                 }
                 catch (connectionError) {
                     console.warn('WebSocket connection failed or timed out, falling back to demo mode:', connectionError);
-                    this.handleConnected(); // Fall back to demo mode
+                    this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+                    this.sendButton.disabled = false;
                     return;
                 }
             }
@@ -67,7 +69,8 @@ export class ChatWindow {
         }
         catch (error) {
             console.warn('WebSocket connection failed, running in demo mode:', error);
-            this.handleConnected(); // Still enable the interface
+            this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+            this.sendButton.disabled = false;
         }
     }
     handleSubmit(event) {
@@ -161,7 +164,8 @@ export class ChatWindow {
             error.message.includes('WebSocket connection failed') ||
             error.message.includes('Failed to fetch')) {
             this.showError('AI agent is currently unavailable. Running in demo mode with simulated responses.');
-            this.handleConnected(); // Fall back to demo mode
+            this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+            this.sendButton.disabled = false;
         }
         else {
             this.showError(`Connection error: ${error.message}`);

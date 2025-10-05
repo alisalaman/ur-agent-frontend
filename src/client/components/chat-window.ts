@@ -24,6 +24,7 @@ export class ChatWindow {
     this.wsService = new WebSocketService(wsConfig);
     this.initializeElements();
     this.setupEventListeners();
+    this.updateStatus('connecting', 'Connecting...');
     this.connect();
   }
 
@@ -53,7 +54,7 @@ export class ChatWindow {
       if (this.wsService && wsUrl && !wsUrl.includes('localhost:8080') && wsUrl !== 'demo-mode') {
         // Set a timeout for WebSocket connection attempts
         const connectionTimeout = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Connection timeout')), 5000); // 5 second timeout
+          setTimeout(() => reject(new Error('Connection timeout')), 2000); // 2 second timeout
         });
 
         try {
@@ -66,7 +67,8 @@ export class ChatWindow {
             'WebSocket connection failed or timed out, falling back to demo mode:',
             connectionError
           );
-          this.handleConnected(); // Fall back to demo mode
+          this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+          this.sendButton.disabled = false;
           return;
         }
       } else {
@@ -76,7 +78,8 @@ export class ChatWindow {
       }
     } catch (error) {
       console.warn('WebSocket connection failed, running in demo mode:', error);
-      this.handleConnected(); // Still enable the interface
+      this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+      this.sendButton.disabled = false;
     }
   }
 
@@ -188,7 +191,8 @@ export class ChatWindow {
       this.showError(
         'AI agent is currently unavailable. Running in demo mode with simulated responses.'
       );
-      this.handleConnected(); // Fall back to demo mode
+      this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');
+      this.sendButton.disabled = false;
     } else {
       this.showError(`Connection error: ${error.message}`);
     }
