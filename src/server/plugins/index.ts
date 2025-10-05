@@ -30,6 +30,15 @@ export async function registerPlugins(server: Hapi.Server): Promise<void> {
     '../../../node_modules/govuk-frontend/dist/govuk'
   );
 
+  // Debug logging for template paths
+  console.log('__dirname:', __dirname);
+  console.log('Templates path:', templatesPath);
+  console.log('GOV.UK templates path:', govukTemplatesPath);
+  console.log('Paths exist:', {
+    templates: require('fs').existsSync(templatesPath),
+    govuk: require('fs').existsSync(govukTemplatesPath),
+  });
+
   server.views({
     engines: {
       njk: {

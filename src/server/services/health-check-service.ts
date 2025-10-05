@@ -3,23 +3,51 @@ import { WebSocketService } from '../../client/services/websocket-service';
 import { logger } from '../utils/logging';
 
 export class HealthCheckService {
-  private redis: RedisClientType;
+  private redis: RedisClientType | null = null;
   private wsService: WebSocketService;
 
   constructor(wsService: WebSocketService) {
-    this.redis = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
-    });
     this.wsService = wsService;
+
+    // Only create Redis client if REDIS_URL is provided
+    if (process.env.REDIS_URL) {
+      try {
+        this.redis = createClient({
+          url: process.env.REDIS_URL,
+        });
+
+        this.redis.on('error', (error) => {
+          logger.warn('Redis connection error', { error: error.message });
+          this.redis = null; // Mark as unavailable
+        });
+
+        this.redis.connect().catch((error) => {
+          logger.warn('Redis connection failed', { error: error.message });
+          this.redis = null; // Mark as unavailable
+        });
+      } catch (error) {
+        logger.warn('Redis client creation failed', {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        this.redis = null;
+      }
+    } else {
+      logger.info('Redis not configured, health checks will return false');
+    }
   }
 
   async checkRedis(): Promise<boolean> {
+    if (!this.redis) {
+      return false; // Redis not available
+    }
+
     try {
       await this.redis.ping();
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Redis health check failed', { error: errorMessage });
+      logger.warn('Redis health check failed', { error: errorMessage });
+      this.redis = null; // Mark as unavailable
       return false;
     }
   }
