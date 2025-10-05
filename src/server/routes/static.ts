@@ -47,6 +47,31 @@ export const staticRoutes: Hapi.Plugin<{}> = {
       },
     });
 
+    // Debug route to check static file serving
+    server.route({
+      method: 'GET',
+      path: '/debug/js-path',
+      options: {
+        auth: false,
+      },
+      handler: (_request, h) => {
+        const jsPath = path.join(__dirname, '../../../public/js');
+        const fs = require('fs');
+        const exists = fs.existsSync(jsPath);
+        const websocketPath = path.join(jsPath, 'services/websocket-service.js');
+        const websocketExists = fs.existsSync(websocketPath);
+
+        return h.response({
+          __dirname,
+          jsPath,
+          jsPathExists: exists,
+          websocketPath,
+          websocketExists,
+          files: exists ? fs.readdirSync(jsPath) : 'path does not exist',
+        });
+      },
+    });
+
     // Serve GOV.UK Frontend JS directly from npm package
     server.route({
       method: 'GET',
