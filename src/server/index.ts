@@ -22,6 +22,13 @@ async function createServer(): Promise<Hapi.Server> {
 
 async function startServer(): Promise<void> {
   try {
+    // Debug environment variables for Render
+    console.log('=== RENDER DEPLOYMENT DEBUG ===');
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('PORT:', process.env.PORT);
+    console.log('HOST:', process.env.HOST);
+    console.log('===============================');
+
     // Validate configuration before starting server
     const configValidation = ConfigValidator.validateAll();
 
@@ -38,8 +45,14 @@ async function startServer(): Promise<void> {
 
     const server = await createServer();
     await server.start();
+
+    console.log('=== SERVER STARTUP SUCCESS ===');
     console.log(`Server running at: ${server.info.uri}`);
+    console.log(`Server port: ${server.info.port}`);
+    console.log(`Server host: ${server.info.host}`);
+    console.log(`Server address: ${server.info.address}`);
     console.log(`WebSocket endpoint available at: ${server.info.uri}/ws/synthetic-agents`);
+    console.log('===============================');
   } catch (error) {
     console.error('Error starting server:', error);
     process.exit(1);

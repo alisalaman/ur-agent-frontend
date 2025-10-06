@@ -18,6 +18,24 @@ export const healthRoutes: Hapi.Plugin<{}> = {
       },
     });
 
+    // Simple status check for Render
+    server.route({
+      method: 'GET',
+      path: '/status',
+      options: {
+        auth: false,
+      },
+      handler: async (_request, h) => {
+        return h.response({
+          status: 'ok',
+          service: 'ur-agent-frontend',
+          timestamp: new Date().toISOString(),
+          port: server.info.port,
+          host: server.info.host,
+        });
+      },
+    });
+
     // Detailed health check
     server.route({
       method: 'GET',
