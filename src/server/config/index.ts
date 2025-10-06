@@ -7,7 +7,8 @@ config({ path: `.env.${environment}` });
 export const appConfig: AppConfig = {
   server: {
     port: parseInt(process.env.PORT || '3000', 10),
-    host: process.env.HOST || 'localhost',
+    // Bind to 0.0.0.0 for production deployments (like Render) to accept external connections
+    host: process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'),
     cors: {
       origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
       credentials: true,

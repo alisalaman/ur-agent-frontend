@@ -16,5 +16,9 @@ RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 USER nodejs
 
+# Set production environment variables
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
+
 EXPOSE 3000
 CMD ["npm", "start"]

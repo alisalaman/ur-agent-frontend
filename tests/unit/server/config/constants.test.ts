@@ -8,7 +8,6 @@ import {
     LOG_LEVELS,
     DEGRADATION_LEVELS,
     DEFAULT_REDIS_URL,
-    DEFAULT_WEBSOCKET_URL,
     DEFAULT_AI_AGENT_URL
 } from '../../../../src/server/config/constants';
 
@@ -92,13 +91,11 @@ describe('Configuration Constants', () => {
     describe('Default URLs', () => {
         it('should have valid default URLs', () => {
             expect(DEFAULT_REDIS_URL).toBe('redis://localhost:6379');
-            expect(DEFAULT_WEBSOCKET_URL).toBe('ws://localhost:8080');
             expect(DEFAULT_AI_AGENT_URL).toBe('http://localhost:3001');
         });
 
         it('should have proper URL formats', () => {
             expect(DEFAULT_REDIS_URL).toMatch(/^redis:\/\//);
-            expect(DEFAULT_WEBSOCKET_URL).toMatch(/^ws:\/\//);
             expect(DEFAULT_AI_AGENT_URL).toMatch(/^http:\/\//);
         });
     });

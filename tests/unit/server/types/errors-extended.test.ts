@@ -99,3 +99,4 @@ describe('Extended Error Types', () => {
         });
     });
 });
+

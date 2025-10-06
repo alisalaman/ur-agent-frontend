@@ -63,3 +63,4 @@ describe('Error Types', () => {
         expect(error.name).toBe('CircuitBreakerOpenError');
     });
 });
+

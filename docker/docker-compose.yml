@@ -9,7 +9,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+      - AI_AGENT_WS_URL=wss://ur-agent.onrender.com/ws/synthetic-agents
       - REDIS_URL=redis://redis:6379
     depends_on:
       - redis

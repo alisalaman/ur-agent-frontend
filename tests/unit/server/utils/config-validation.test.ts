@@ -16,7 +16,6 @@ describe('ConfigValidator', () => {
             process.env.NODE_ENV = 'test';
             process.env.LOG_LEVEL = 'info';
             process.env.REDIS_URL = 'redis://localhost:6379';
-            process.env.WEBSOCKET_URL = 'ws://localhost:8080';
 
             const result = ConfigValidator.validateResilienceConfig();
 
@@ -39,13 +38,11 @@ describe('ConfigValidator', () => {
             process.env.NODE_ENV = 'test';
             process.env.LOG_LEVEL = 'info';
             delete process.env.REDIS_URL;
-            delete process.env.WEBSOCKET_URL;
 
             const result = ConfigValidator.validateResilienceConfig();
 
             expect(result.isValid).toBe(true);
             expect(result.warnings).toContain('Optional environment variable not set: REDIS_URL (using default)');
-            expect(result.warnings).toContain('Optional environment variable not set: WEBSOCKET_URL (using default)');
         });
 
         test('should fail with invalid log level', () => {
@@ -62,13 +59,11 @@ describe('ConfigValidator', () => {
             process.env.NODE_ENV = 'test';
             process.env.LOG_LEVEL = 'info';
             process.env.REDIS_URL = 'invalid-url';
-            process.env.WEBSOCKET_URL = 'not-a-url';
 
             const result = ConfigValidator.validateResilienceConfig();
 
             expect(result.isValid).toBe(false);
             expect(result.errors).toContain('Invalid REDIS_URL format: invalid-url');
-            expect(result.errors).toContain('Invalid WEBSOCKET_URL format: not-a-url');
         });
     });
 
