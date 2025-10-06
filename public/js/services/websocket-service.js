@@ -111,7 +111,7 @@ export class WebSocketService extends EventEmitter {
         const message = {
             type: 'query',
             query: content,
-            persona_type: 'query_all',
+            persona_type: 'BankRep', // Use a valid persona type
         };
         this.ws.send(JSON.stringify(message));
         this.connection.lastActivity = new Date();

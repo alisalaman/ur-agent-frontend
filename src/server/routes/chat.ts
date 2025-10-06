@@ -24,13 +24,14 @@ export const chatRoutes: Hapi.Plugin<{}> = {
         // Generate a temporary session ID and user ID for demo purposes
         const sessionId = Math.random().toString(36).substr(2, 9);
         const userId = 'demo-user';
-        // Use the same server for WebSocket connections
+        // Use the AI agent WebSocket URL from environment
         const wsUrl = process.env.AI_AGENT_WS_URL || 'demo-mode';
 
         return h.view('pages/chat', {
           sessionId,
           userId,
           wsUrl,
+          timestamp: Date.now(),
         });
       },
     });

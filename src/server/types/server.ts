@@ -14,4 +14,11 @@ declare module '@hapi/hapi' {
     metricsService: MetricsService;
     wsService: WebSocketService;
   }
+
+  interface Server {
+    circuitBreakerService: CircuitBreakerService;
+    degradationService: GracefulDegradationService;
+    healthCheckService: HealthCheckService;
+    metricsService: MetricsService;
+  }
 }

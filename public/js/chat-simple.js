@@ -168,7 +168,33 @@ class SimpleChatWindow {
 
     handleMessage(message) {
         console.log('Simple ChatWindow: Message received:', message);
-        this.addMessage(message.content, 'assistant');
+
+        // Handle different message types from the backend
+        if (message.type === 'welcome') {
+            // Don't display welcome messages in the chat
+            return;
+        } else if (message.type === 'query_response' && message.responses) {
+            // Display responses from all personas as separate messages with tags
+            const personaConfig = {
+                'BankRep': { name: 'Bank Representative', color: 'govuk-tag--blue' },
+                'TradeBodyRep': { name: 'Trade Body Representative', color: 'govuk-tag--green' },
+                'PaymentsEcosystemRep': { name: 'Payments Ecosystem Representative', color: 'govuk-tag--purple' }
+            };
+
+            Object.keys(message.responses).forEach(persona => {
+                const config = personaConfig[persona] || { name: persona, color: 'govuk-tag--grey' };
+                const response = message.responses[persona];
+
+                // Create a message with the tag above the content
+                this.addMessageWithTag(response, 'assistant', config.name, config.color);
+            });
+        } else if (message.content) {
+            // Fallback for other message formats
+            this.addMessage(message.content, 'assistant');
+        } else {
+            // Fallback for unknown message formats
+            this.addMessage(JSON.stringify(message), 'assistant');
+        }
     }
 
     handleError(error) {
@@ -179,8 +205,36 @@ class SimpleChatWindow {
     }
 
     updateStatus(status, message) {
-        this.statusIndicator.className = `govuk-chat-status govuk-chat-status--${status}`;
-        this.statusIndicator.textContent = message;
+        // Update the notification banner to use proper GOV.UK styling
+        this.statusIndicator.className = 'govuk-notification-banner';
+
+        // Update the title based on status
+        const titleElement = this.statusIndicator.querySelector('.govuk-notification-banner__title');
+        if (titleElement) {
+            if (status === 'connected') {
+                titleElement.textContent = 'Success';
+                this.statusIndicator.classList.add('govuk-notification-banner--success');
+            } else if (status === 'disconnected' || status === 'error') {
+                titleElement.textContent = 'Important';
+            } else if (status === 'connecting') {
+                titleElement.textContent = 'Important';
+            } else if (status === 'demo') {
+                titleElement.textContent = 'Important';
+            }
+        }
+
+        // Update the message content
+        const messageElement = this.statusIndicator.querySelector('#connection-message');
+        if (messageElement) {
+            messageElement.textContent = message;
+        }
+
+        // Show or hide the banner based on status
+        if (status === 'connected') {
+            this.statusIndicator.style.display = 'none'; // Hide when connected
+        } else {
+            this.statusIndicator.style.display = 'block'; // Show for other states
+        }
     }
 
     handleSubmit(event) {
@@ -218,16 +272,82 @@ class SimpleChatWindow {
     }
 
     addMessage(content, sender) {
+        // Hide placeholder message when first real message is added
+        const placeholderMessage = document.getElementById('placeholder-message');
+        if (placeholderMessage) {
+            console.log('Hiding placeholder message');
+            placeholderMessage.style.display = 'none';
+        }
+
         const messageDiv = document.createElement('div');
         messageDiv.className = `govuk-chat-message govuk-chat-message--${sender}`;
 
-        const messageContent = document.createElement('p');
+        const messageContent = document.createElement('div');
         messageContent.className = 'govuk-body';
-        messageContent.textContent = content;
+
+        // Convert markdown to HTML
+        const htmlContent = this.convertMarkdownToHtml(content);
+        messageContent.innerHTML = htmlContent;
 
         messageDiv.appendChild(messageContent);
         this.messagesContainer.appendChild(messageDiv);
         this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    }
+
+    addMessageWithTag(content, sender, tagText, tagColor) {
+        // Hide placeholder message when first real message is added
+        const placeholderMessage = document.getElementById('placeholder-message');
+        if (placeholderMessage) {
+            placeholderMessage.style.display = 'none';
+        }
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `govuk-chat-message govuk-chat-message--${sender}`;
+
+        // Create tag element
+        const tagElement = document.createElement('strong');
+        tagElement.className = `govuk-tag ${tagColor}`;
+        tagElement.textContent = tagText;
+
+        // Create message content
+        const messageContent = document.createElement('div');
+        messageContent.className = 'govuk-body';
+        messageContent.style.marginTop = '10px'; // Add spacing between tag and content
+
+        // Convert markdown to HTML
+        const htmlContent = this.convertMarkdownToHtml(content);
+        messageContent.innerHTML = htmlContent;
+
+        // Add tag above the message content
+        messageDiv.appendChild(tagElement);
+        messageDiv.appendChild(messageContent);
+
+        this.messagesContainer.appendChild(messageDiv);
+        this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+    }
+
+    convertMarkdownToHtml(markdown) {
+        // Simple markdown to HTML converter
+        let html = markdown;
+
+        // Convert **bold** to <strong>bold</strong>
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Convert *italic* to <em>italic</em>
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // Convert numbered lists - first convert to list items
+        html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
+
+        // Wrap consecutive <li> elements in <ol>
+        html = html.replace(/(<li>.*?<\/li>)(\s*<li>.*?<\/li>)*/gs, (match) => {
+            return `<ol>${match}</ol>`;
+        });
+
+        // Convert line breaks to <br> (but not inside list items)
+        html = html.replace(/\n(?!<li>)/g, '<br>');
+
+        return html;
     }
 
     disconnect() {

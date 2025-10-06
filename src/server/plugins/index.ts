@@ -4,7 +4,6 @@ import Vision from '@hapi/vision';
 import path from 'path';
 import { sessionPlugin } from './session';
 import { websocketPlugin } from './websocket';
-import { nesWebSocketPlugin } from './nes-websocket';
 import { resiliencePlugin } from './resilience';
 
 export async function registerPlugins(server: Hapi.Server): Promise<void> {
@@ -19,9 +18,6 @@ export async function registerPlugins(server: Hapi.Server): Promise<void> {
 
   // Register WebSocket plugin
   await server.register(websocketPlugin);
-
-  // Register Nes WebSocket plugin for integrated WebSocket support
-  await server.register(nesWebSocketPlugin);
 
   // Register resilience plugin
   await server.register(resiliencePlugin);

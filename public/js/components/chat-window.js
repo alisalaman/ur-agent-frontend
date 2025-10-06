@@ -45,7 +45,7 @@ export class ChatWindow {
             const wsUrl = this.wsService.config?.url;
             console.log('Chat window WebSocket URL:', wsUrl);
             console.log('WebSocket service config:', this.wsService.config);
-            if (this.wsService && wsUrl && !wsUrl.includes('localhost:8080') && wsUrl !== 'demo-mode') {
+            if (this.wsService && wsUrl && wsUrl !== 'demo-mode') {
                 // Try to connect to the AI agent service
                 console.log('Attempting to connect to AI agent service:', wsUrl);
                 // Set a timeout for WebSocket connection attempts
@@ -137,7 +137,7 @@ export class ChatWindow {
         console.log('handleConnected - wsUrl:', wsUrl);
         console.log('handleConnected - connectionStatus:', connectionStatus);
         const isDemoMode = !wsUrl ||
-            wsUrl.includes('localhost:8080') ||
+            wsUrl.includes('localhost:8') ||
             wsUrl === 'demo-mode' ||
             !connectionStatus ||
             connectionStatus?.status !== 'connected';

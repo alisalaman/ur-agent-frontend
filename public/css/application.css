@@ -8569,15 +8569,26 @@
   padding: 15px;
   border-radius: 8px;
   position: relative;
-  max-width: 80%;
   word-wrap: break-word;
+  font-size: 16px;
+}
+
+.govuk-chat-message .govuk-tag {
+  max-width: none !important;
 }
 
 .govuk-chat-message--user {
   background-color: #1d70b8;
-  color: white;
+  color: white !important;
   margin-left: auto;
   margin-right: 0;
+}
+.govuk-chat-message--user p,
+.govuk-chat-message--user div,
+.govuk-chat-message--user span,
+.govuk-chat-message--user strong,
+.govuk-chat-message--user em {
+  color: white !important;
 }
 
 .govuk-chat-message--assistant {
@@ -8614,41 +8625,19 @@
   margin-bottom: 15px;
 }
 
-.govuk-chat-status {
-  padding: 10px 15px;
-  margin-bottom: 15px;
-  border-radius: 4px;
-  font-weight: bold;
+/* Placeholder message styling */
+.govuk-chat-message--placeholder {
+  background-color: #f3f2f1;
+  border: 1px solid #b1b4b6;
+  color: #505a5f;
+  text-align: center;
+  font-style: italic;
+  margin: 20px auto;
+  max-width: 400px;
 }
-
-.govuk-chat-status--connecting {
-  background-color: #fef3cd;
-  border: 1px solid #f0ad4e;
-  color: #8a6d3b;
-}
-
-.govuk-chat-status--connected {
-  background-color: #d4edda;
-  border: 1px solid #28a745;
-  color: #155724;
-}
-
-.govuk-chat-status--disconnected {
-  background-color: #f8d7da;
-  border: 1px solid #dc3545;
-  color: #721c24;
-}
-
-.govuk-chat-status--error {
-  background-color: #f8d7da;
-  border: 1px solid #dc3545;
-  color: #721c24;
-}
-
-.govuk-chat-status--demo {
-  background-color: #d1ecf1;
-  border: 1px solid #17a2b8;
-  color: #0c5460;
+.govuk-chat-message--placeholder p {
+  margin: 0;
+  padding: 20px;
 }
 
 /* Loading animation for messages */
@@ -8676,9 +8665,6 @@
 @media (max-width: 768px) {
   .govuk-chat-container {
     height: 500px;
-  }
-  .govuk-chat-message {
-    max-width: 95%;
   }
 }
 

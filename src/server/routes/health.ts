@@ -11,7 +11,7 @@ export const healthRoutes: Hapi.Plugin<{}> = {
         auth: false,
       },
       handler: async (_request, h) => {
-        const healthCheckService = server.app.healthCheckService;
+        const healthCheckService = server.healthCheckService;
         const health = await healthCheckService.getSystemHealth();
 
         return h.response(health).code(health.status === 'healthy' ? 200 : 503);
@@ -26,9 +26,9 @@ export const healthRoutes: Hapi.Plugin<{}> = {
         auth: false,
       },
       handler: async (_request, h) => {
-        const healthCheckService = server.app.healthCheckService;
-        const degradationService = server.app.degradationService;
-        const circuitBreakerService = server.app.circuitBreakerService;
+        const healthCheckService = server.healthCheckService;
+        const degradationService = server.degradationService;
+        const circuitBreakerService = server.circuitBreakerService;
 
         const [health, degradationLevel, breakerStats] = await Promise.all([
           healthCheckService.getSystemHealth(),

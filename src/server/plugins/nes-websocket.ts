@@ -33,38 +33,20 @@ export const nesWebSocketPlugin: Hapi.Plugin<{}> = {
         onDisconnection: () => {
           console.log('WebSocket connection closed via Nes');
         },
-      },
-    });
 
-    // Add WebSocket route for chat messages
-    server.subscription('/ws/synthetic-agents', {
-      filter: () => {
-        // Allow all messages for now
-        return true;
-      },
-      onSubscribe: (_, path) => {
-        console.log('Client subscribed to WebSocket endpoint:', path);
-        return true;
-      },
-      onUnsubscribe: (_, path) => {
-        console.log('Client unsubscribed from WebSocket endpoint:', path);
-        return true;
-      },
-    });
-
-    // Handle incoming WebSocket messages
-    server.route({
-      method: 'POST',
-      path: '/ws/synthetic-agents',
-      options: {
-        id: 'websocket-message-handler',
-        handler: async (request) => {
+        onMessage: async (_socket, message: unknown) => {
           try {
-            const message = request.payload as WebSocketMessage;
             console.log('Received WebSocket message:', message);
 
+            // Type guard to ensure message has the expected structure
+            if (!message || typeof message !== 'object') {
+              throw new Error('Invalid message format');
+            }
+
+            const typedMessage = message as WebSocketMessage;
+
             // Handle different message types
-            if (message.type === 'ping') {
+            if (typedMessage.type === 'ping') {
               return {
                 id: generateId(),
                 type: 'pong',
@@ -72,13 +54,9 @@ export const nesWebSocketPlugin: Hapi.Plugin<{}> = {
                 timestamp: new Date(),
                 metadata: {},
               };
-            } else if (message.type === 'query') {
+            } else if (typedMessage.type === 'query') {
               // Handle chat queries with mock responses
-              const response = await handleChatQuery(message);
-
-              // Broadcast response to all connected clients
-              server.publish('/ws/synthetic-agents', response);
-
+              const response = await handleChatQuery(typedMessage);
               return response;
             } else {
               // Handle unknown message types
@@ -101,6 +79,22 @@ export const nesWebSocketPlugin: Hapi.Plugin<{}> = {
             };
           }
         },
+      },
+    });
+
+    // Add WebSocket route for chat messages
+    server.subscription('/ws/synthetic-agents', {
+      filter: () => {
+        // Allow all messages for now
+        return true;
+      },
+      onSubscribe: (_, path) => {
+        console.log('Client subscribed to WebSocket endpoint:', path);
+        return true;
+      },
+      onUnsubscribe: (_, path) => {
+        console.log('Client unsubscribed from WebSocket endpoint:', path);
+        return true;
       },
     });
   },
