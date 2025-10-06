@@ -188,6 +188,13 @@ class SimpleChatWindow {
                 // Create a message with the tag above the content
                 this.addMessageWithTag(response, 'assistant', config.name, config.color);
             });
+        } else if (message.type === 'echo') {
+            // Handle echo messages - display the echoed content
+            if (message.message) {
+                this.addMessage(message.message, 'assistant');
+            } else {
+                this.addMessage('Echo received', 'assistant');
+            }
         } else if (message.content) {
             // Fallback for other message formats
             this.addMessage(message.content, 'assistant');
