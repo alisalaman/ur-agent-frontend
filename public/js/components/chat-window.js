@@ -165,15 +165,44 @@ export class ChatWindow {
     }
     handleMessage(message) {
         const msg = message;
-        this.addMessageToUI({
-            id: msg.id,
-            sessionId: this.sessionId,
-            content: msg.content,
-            role: 'assistant',
-            timestamp: new Date(msg.timestamp),
-            metadata: msg.metadata || {},
-            status: 'delivered',
-        });
+        // Handle different message types
+        if (msg.type === 'connection' || msg.type === 'status') {
+            // For connection/status messages, use the message property or content
+            const messageContent = msg.message || msg.content || 'Connected';
+            this.addMessageToUI({
+                id: msg.id || this.generateId(),
+                sessionId: this.sessionId,
+                content: messageContent,
+                role: 'system',
+                timestamp: new Date(msg.timestamp),
+                metadata: msg.metadata || {},
+                status: 'delivered',
+            });
+        }
+        else if (msg.type === 'message' || msg.type === 'response') {
+            // For actual chat messages
+            this.addMessageToUI({
+                id: msg.id || this.generateId(),
+                sessionId: this.sessionId,
+                content: msg.content || '',
+                role: 'assistant',
+                timestamp: new Date(msg.timestamp),
+                metadata: msg.metadata || {},
+                status: 'delivered',
+            });
+        }
+        else if (msg.type === 'error') {
+            // For error messages
+            this.addMessageToUI({
+                id: msg.id || this.generateId(),
+                sessionId: this.sessionId,
+                content: msg.content || msg.message || 'An error occurred',
+                role: 'system',
+                timestamp: new Date(msg.timestamp),
+                metadata: msg.metadata || {},
+                status: 'delivered',
+            });
+        }
     }
     handleError(error) {
         console.error('WebSocket error:', error);

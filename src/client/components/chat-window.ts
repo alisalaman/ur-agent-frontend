@@ -197,20 +197,50 @@ export class ChatWindow {
 
   private handleMessage(message: unknown): void {
     const msg = message as {
-      id: string;
-      content: string;
+      id?: string;
+      type: string;
+      content?: string;
+      message?: string;
       timestamp: string;
       metadata?: Record<string, unknown>;
     };
-    this.addMessageToUI({
-      id: msg.id,
-      sessionId: this.sessionId,
-      content: msg.content,
-      role: 'assistant',
-      timestamp: new Date(msg.timestamp),
-      metadata: msg.metadata || {},
-      status: 'delivered',
-    });
+
+    // Handle different message types
+    if (msg.type === 'connection' || msg.type === 'status') {
+      // For connection/status messages, use the message property or content
+      const messageContent = msg.message || msg.content || 'Connected';
+      this.addMessageToUI({
+        id: msg.id || this.generateId(),
+        sessionId: this.sessionId,
+        content: messageContent,
+        role: 'system',
+        timestamp: new Date(msg.timestamp),
+        metadata: msg.metadata || {},
+        status: 'delivered',
+      });
+    } else if (msg.type === 'message' || msg.type === 'response') {
+      // For actual chat messages
+      this.addMessageToUI({
+        id: msg.id || this.generateId(),
+        sessionId: this.sessionId,
+        content: msg.content || '',
+        role: 'assistant',
+        timestamp: new Date(msg.timestamp),
+        metadata: msg.metadata || {},
+        status: 'delivered',
+      });
+    } else if (msg.type === 'error') {
+      // For error messages
+      this.addMessageToUI({
+        id: msg.id || this.generateId(),
+        sessionId: this.sessionId,
+        content: msg.content || msg.message || 'An error occurred',
+        role: 'system',
+        timestamp: new Date(msg.timestamp),
+        metadata: msg.metadata || {},
+        status: 'delivered',
+      });
+    }
   }
 
   private handleError(error: Error): void {
@@ -305,8 +335,8 @@ export class ChatWindow {
       const responses = [
         "Thank you for your message. I'm here to help with your banking and payments questions.",
         "I understand you're asking about " +
-        userMessage.toLowerCase() +
-        '. Let me help you with that.',
+          userMessage.toLowerCase() +
+          '. Let me help you with that.',
         "That's an interesting question. In the context of banking and payments, I can provide some guidance.",
         "I'm a banking and payments AI assistant. How can I help you today?",
         "Your message has been received. I'm processing your request and will provide a detailed response.",
