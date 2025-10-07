@@ -66,10 +66,13 @@ export class ChatWindow {
       if (this.wsService && wsUrl && wsUrl !== 'demo-mode') {
         // Get JWT token if not already provided
         if (!this.jwtToken) {
+          console.log('No JWT token provided, attempting to get one...');
           await this.getJWTToken();
         }
         // Try to connect to the AI agent service
         console.log('Attempting to connect to AI agent service:', wsUrl);
+        console.log('Using JWT token:', this.jwtToken ? 'Yes' : 'No');
+        console.log('JWT token value:', this.jwtToken);
 
         // Set a timeout for WebSocket connection attempts
         const connectionTimeout = new Promise((_, reject) => {

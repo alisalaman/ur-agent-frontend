@@ -51,10 +51,16 @@ export class WebSocketService extends EventEmitter {
                 };
                 // Build WebSocket URL with token if provided
                 let wsUrl = this.config.url;
-                if (token) {
+                const tokenToUse = token || this.config.token;
+                if (tokenToUse) {
                     const separator = wsUrl.includes('?') ? '&' : '?';
-                    wsUrl = `${wsUrl}${separator}token=${encodeURIComponent(token)}`;
+                    wsUrl = `${wsUrl}${separator}token=${encodeURIComponent(tokenToUse)}`;
+                    console.log('WebSocket URL with token:', wsUrl);
                 }
+                else {
+                    console.log('No token provided for WebSocket connection');
+                }
+                console.log('Final WebSocket URL:', wsUrl);
                 this.ws = new WebSocket(wsUrl);
                 this.setupEventHandlers();
                 this.ws.onopen = () => {
