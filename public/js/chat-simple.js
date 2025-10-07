@@ -23,7 +23,7 @@ class SimpleWebSocketService {
         }
     }
 
-    async connect(sessionId, userId) {
+    async connect(sessionId, userId, token) {
         console.log('Simple WebSocket: Attempting to connect...');
 
         // Check if we have a valid WebSocket URL
@@ -34,8 +34,19 @@ class SimpleWebSocketService {
         }
 
         try {
-            console.log('Simple WebSocket: Connecting to', this.config.url);
-            this.ws = new WebSocket(this.config.url);
+            // Build WebSocket URL with token if provided
+            let wsUrl = this.config.url;
+            const tokenToUse = token || this.config.token;
+            if (tokenToUse) {
+                const separator = wsUrl.includes('?') ? '&' : '?';
+                wsUrl = `${wsUrl}${separator}token=${encodeURIComponent(tokenToUse)}`;
+                console.log('Simple WebSocket: URL with token:', wsUrl);
+            } else {
+                console.log('Simple WebSocket: No token provided for WebSocket connection');
+            }
+            
+            console.log('Simple WebSocket: Connecting to', wsUrl);
+            this.ws = new WebSocket(wsUrl);
 
             this.ws.onopen = () => {
                 console.log('Simple WebSocket: Connected successfully');
@@ -110,10 +121,11 @@ class SimpleWebSocketService {
 
 // Simple ChatWindow implementation
 class SimpleChatWindow {
-    constructor(container, sessionId, userId, wsConfig) {
+    constructor(container, sessionId, userId, wsConfig, jwtToken) {
         this.container = container;
         this.sessionId = sessionId;
         this.userId = userId;
+        this.jwtToken = jwtToken;
         this.wsService = new SimpleWebSocketService(wsConfig);
         this.initializeElements();
         this.setupEventListeners();
@@ -143,7 +155,8 @@ class SimpleChatWindow {
     async connect() {
         try {
             console.log('Simple ChatWindow: Attempting connection...');
-            await this.wsService.connect(this.sessionId, this.userId);
+            console.log('Simple ChatWindow: Using JWT token:', this.jwtToken ? 'Yes' : 'No');
+            await this.wsService.connect(this.sessionId, this.userId, this.jwtToken);
         } catch (error) {
             console.log('Simple ChatWindow: Connection failed, using demo mode:', error);
             this.updateStatus('demo', 'Demo Mode - AI Agent Unavailable');

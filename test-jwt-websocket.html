@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JWT WebSocket Test</title>
+</head>
+<body>
+    <h1>JWT WebSocket Test</h1>
+    <div id="output"></div>
+    
+    <script>
+        // Test the WebSocket service with JWT token
+        const output = document.getElementById('output');
+        
+        function log(message) {
+            output.innerHTML += '<p>' + message + '</p>';
+            console.log(message);
+        }
+        
+        // Simulate the configuration from the chat page
+        const sessionId = 'test-session';
+        const userId = 'test-user';
+        const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkZW1vLXVzZXIiLCJzZXNzaW9uSWQiOiJ0ZXN0LXNlc3Npb24iLCJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNzU5ODE2Nzc2LCJpYXQiOjE3NTk4MTMxNzZ9.test-token';
+        const wsConfig = {
+            url: 'ws://localhost:8000/ws/synthetic-agents',
+            reconnectAttempts: 5,
+            reconnectDelay: 1000,
+            heartbeatInterval: 30000,
+            timeout: 10000,
+            token: jwtToken
+        };
+        
+        log('Testing WebSocket service with JWT token...');
+        log('JWT Token: ' + jwtToken);
+        log('WebSocket URL: ' + wsConfig.url);
+        
+        // Test the URL building logic
+        let wsUrl = wsConfig.url;
+        const tokenToUse = jwtToken;
+        if (tokenToUse) {
+            const separator = wsUrl.includes('?') ? '&' : '?';
+            wsUrl = `${wsUrl}${separator}token=${encodeURIComponent(tokenToUse)}`;
+            log('Final WebSocket URL with token: ' + wsUrl);
+        } else {
+            log('No token provided for WebSocket connection');
+        }
+        
+        // Test WebSocket connection
+        try {
+            log('Attempting WebSocket connection...');
+            const ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                log('WebSocket connected successfully!');
+                ws.close();
+            };
+            
+            ws.onerror = function(error) {
+                log('WebSocket error: ' + error);
+            };
+            
+            ws.onclose = function(event) {
+                log('WebSocket closed with code: ' + event.code + ', reason: ' + event.reason);
+            };
+        } catch (error) {
+            log('Error creating WebSocket: ' + error);
+        }
+    </script>
+</body>
+</html>
