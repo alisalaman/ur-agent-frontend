@@ -24,6 +24,14 @@ export class WebSocketService extends EventEmitter {
   }
 
   /**
+   * Get the WebSocket configuration
+   * @returns WebSocket configuration
+   */
+  getConfig(): WebSocketConfig {
+    return this.config;
+  }
+
+  /**
    * Establishes a WebSocket connection with retry logic
    * @param sessionId - Unique session identifier
    * @param userId - User identifier

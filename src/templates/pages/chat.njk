@@ -1,83 +1,83 @@
 {% extends "layouts/default.njk" %}
 {% block pageTitle %}Chat Interface{% endblock %}
 {% block content %}
-  <div class="govuk-width-container">
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-full">
-        <h1 class="govuk-heading-xl">Chat Interface</h1>
-        <div
-          id="connection-status"
-          class="govuk-notification-banner"
-          role="region"
-          aria-labelledby="govuk-notification-banner-title"
-          data-module="govuk-notification-banner"
-          style="display: none;">
-          <div class="govuk-notification-banner__header">
-            <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
-              Important
-            </h2>
-          </div>
-          <div class="govuk-notification-banner__content">
-            <p class="govuk-notification-banner__heading" id="connection-message">
-              Connecting to AI agent service...
-            </p>
-          </div>
-        </div>
-        <div class="govuk-body">
-          <p>Enter your query below to get responses from our AI representatives.</p>
-        </div>
-        <div id="chat-container" class="govuk-chat-container">
-          <div id="chat-messages" class="govuk-chat-messages">
-            <div id="placeholder-message" class="govuk-chat-message govuk-chat-message--placeholder" style="display: block;">
-              <p class="govuk-body">Your messages and responses will appear in this chat panel</p>
+    <div class="govuk-width-container">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-full">
+                <h1 class="govuk-heading-xl">Chat Interface</h1>
+                <div
+                    id="connection-status"
+                    class="govuk-notification-banner"
+                    role="region"
+                    aria-labelledby="govuk-notification-banner-title"
+                    data-module="govuk-notification-banner"
+                    style="display: none;">
+                    <div class="govuk-notification-banner__header">
+                        <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">
+                            Important
+                        </h2>
+                    </div>
+                    <div class="govuk-notification-banner__content">
+                        <p class="govuk-notification-banner__heading" id="connection-message">
+                            Connecting to AI agent service...
+                        </p>
+                    </div>
+                </div>
+                <div class="govuk-body">
+                    <p>Enter your query below to get responses from our AI representatives.</p>
+                </div>
+                <div id="chat-container" class="govuk-chat-container">
+                    <div id="chat-messages" class="govuk-chat-messages">
+                        <div id="placeholder-message" class="govuk-chat-message govuk-chat-message--placeholder" style="display: block;">
+                            <p class="govuk-body">Your messages and responses will appear in this chat panel</p>
+                        </div>
+                    </div>
+                    <div id="chat-input-container" class="govuk-chat-input-container">
+                        <form id="chat-form" class="govuk-form">
+                            <div class="govuk-form-group">
+                                <label class="govuk-label" for="message-input">
+                                    Your message
+                                </label>
+                                <textarea
+                                    class="govuk-textarea"
+                                    id="message-input"
+                                    name="message"
+                                    rows="3"
+                                    placeholder="Type your message here..."
+                                    required
+                                    disabled></textarea>
+                            </div>
+                            <button type="submit" class="govuk-button" data-module="govuk-button" disabled>
+                                Send message
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div id="chat-input-container" class="govuk-chat-input-container">
-            <form id="chat-form" class="govuk-form">
-              <div class="govuk-form-group">
-                <label class="govuk-label" for="message-input">
-                  Your message
-                </label>
-                <textarea
-                  class="govuk-textarea"
-                  id="message-input"
-                  name="message"
-                  rows="3"
-                  placeholder="Type your message here..."
-                  required
-                  disabled></textarea>
-              </div>
-              <button type="submit" class="govuk-button" data-module="govuk-button" disabled>
-                Send message
-              </button>
-            </form>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 {% endblock %}
 {% block scripts %}
-  <script>
-    // Initialize chat when page loads
-    document.addEventListener('DOMContentLoaded', function () {
-      const sessionId = '{{ sessionId }}';
-      const userId = '{{ userId }}';
-      const jwtToken = '{{ jwtToken or "" }}';
-      const wsConfig = {
-        url: '{{ wsUrl }}',
-        reconnectAttempts: 5,
-        reconnectDelay: 1000,
-        heartbeatInterval: 30000,
-        timeout: 10000,
-        token: jwtToken
-      };
-      const chatContainer = document.getElementById('chat-container');
-      const chatWindow = new ChatWindow(chatContainer, sessionId, userId, wsConfig, jwtToken);
-      // Cleanup on page unload
-      window.addEventListener('beforeunload', function () {
-        chatWindow.disconnect();
-      });
-    });
-  </script>
+    <script>
+        // Initialize chat when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            const sessionId = '{{ sessionId }}';
+            const userId = '{{ userId }}';
+            const jwtToken = '{{ jwtToken or "" }}';
+            const wsConfig = {
+                url: '{{ wsUrl }}',
+                reconnectAttempts: 5,
+                reconnectDelay: 1000,
+                heartbeatInterval: 30000,
+                timeout: 10000,
+                token: jwtToken
+            };
+            const chatContainer = document.getElementById('chat-container');
+            const chatWindow = new ChatWindow(chatContainer, sessionId, userId, wsConfig, jwtToken);
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function () {
+                chatWindow.disconnect();
+            });
+        });
+    </script>
 {% endblock %}

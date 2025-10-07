@@ -1,5 +1,6 @@
 import Hapi from '@hapi/hapi';
 import Nes from '@hapi/nes';
+import { JWTService } from '../services/jwt-service';
 
 interface WebSocketMessage {
   id?: string;
@@ -14,27 +15,65 @@ interface WebSocketMessage {
 export const nesWebSocketPlugin: Hapi.Plugin<{}> = {
   name: 'nes-websocket',
   register: async (server: Hapi.Server): Promise<void> => {
+    const jwtService = new JWTService();
+
     // Register Nes plugin for WebSocket support
     await server.register({
       plugin: Nes,
       options: {
-        onConnection: (socket) => {
-          console.log('New WebSocket connection established via Nes');
+        onConnection: (socket: any, request: any) => {
+          console.log('New WebSocket connection attempt via Nes');
 
-          // Send welcome message
-          socket.send({
-            id: generateId(),
-            type: 'status',
-            content: 'Connected to AI agent service',
-            timestamp: new Date(),
-            metadata: { status: 'connected' },
-          });
+          // Extract token from query parameters
+          const token = jwtService.extractTokenFromQuery(request.query);
+
+          if (!token) {
+            console.log('WebSocket connection rejected: No token provided');
+            socket.send({
+              id: generateId(),
+              type: 'error',
+              content: 'Authentication required',
+              timestamp: new Date(),
+              metadata: { error: 'No token provided' },
+            });
+            socket.close(1008, 'Authentication required');
+            return;
+          }
+
+          try {
+            // Verify JWT token
+            const payload = jwtService.verifyAccessToken(token);
+            console.log('WebSocket connection authenticated for user:', payload.userId);
+
+            // Send welcome message
+            socket.send({
+              id: generateId(),
+              type: 'status',
+              content: 'Connected to AI agent service',
+              timestamp: new Date(),
+              metadata: {
+                status: 'connected',
+                userId: payload.userId,
+                sessionId: payload.sessionId
+              },
+            });
+          } catch (error) {
+            console.log('WebSocket connection rejected: Invalid token', error);
+            socket.send({
+              id: generateId(),
+              type: 'error',
+              content: 'Invalid authentication token',
+              timestamp: new Date(),
+              metadata: { error: 'Invalid token' },
+            });
+            socket.close(1008, 'Invalid authentication token');
+          }
         },
         onDisconnection: () => {
           console.log('WebSocket connection closed via Nes');
         },
 
-        onMessage: async (_socket, message: unknown) => {
+        onMessage: async (_socket: any, message: unknown) => {
           try {
             console.log('Received WebSocket message:', message);
 
@@ -84,15 +123,16 @@ export const nesWebSocketPlugin: Hapi.Plugin<{}> = {
 
     // Add WebSocket route for chat messages
     server.subscription('/ws/synthetic-agents', {
-      filter: () => {
-        // Allow all messages for now
+      filter: (_path: any, _message: any, _options: any) => {
+        // JWT authentication is handled in onConnection
+        // This filter can be used for additional message-level filtering if needed
         return true;
       },
-      onSubscribe: (_, path) => {
+      onSubscribe: (_socket: any, path: any) => {
         console.log('Client subscribed to WebSocket endpoint:', path);
         return true;
       },
-      onUnsubscribe: (_, path) => {
+      onUnsubscribe: (_socket: any, path: any) => {
         console.log('Client unsubscribed from WebSocket endpoint:', path);
         return true;
       },

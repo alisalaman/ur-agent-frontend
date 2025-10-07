@@ -44,9 +44,9 @@ export class ChatWindow {
         try {
             // In Phase 2, WebSocket connection is optional for demo purposes
             // Only connect if WebSocket URL is provided and not a placeholder
-            const wsUrl = this.wsService.config?.url;
+            const wsUrl = this.wsService.getConfig()?.url;
             console.log('Chat window WebSocket URL:', wsUrl);
-            console.log('WebSocket service config:', this.wsService.config);
+            console.log('WebSocket service config:', this.wsService.getConfig());
             if (this.wsService && wsUrl && wsUrl !== 'demo-mode') {
                 // Get JWT token if not already provided
                 if (!this.jwtToken) {
@@ -161,13 +161,14 @@ export class ChatWindow {
         this.sendButton.disabled = true;
     }
     handleMessage(message) {
+        const msg = message;
         this.addMessageToUI({
-            id: message.id,
+            id: msg.id,
             sessionId: this.sessionId,
-            content: message.content,
+            content: msg.content,
             role: 'assistant',
-            timestamp: new Date(message.timestamp),
-            metadata: message.metadata || {},
+            timestamp: new Date(msg.timestamp),
+            metadata: msg.metadata || {},
             status: 'delivered',
         });
     }

@@ -59,9 +59,9 @@ export class ChatWindow {
     try {
       // In Phase 2, WebSocket connection is optional for demo purposes
       // Only connect if WebSocket URL is provided and not a placeholder
-      const wsUrl = this.wsService.config?.url;
+      const wsUrl = this.wsService.getConfig()?.url;
       console.log('Chat window WebSocket URL:', wsUrl);
-      console.log('WebSocket service config:', this.wsService.config);
+      console.log('WebSocket service config:', this.wsService.getConfig());
 
       if (this.wsService && wsUrl && wsUrl !== 'demo-mode') {
         // Get JWT token if not already provided
@@ -302,8 +302,8 @@ export class ChatWindow {
       const responses = [
         "Thank you for your message. I'm here to help with your banking and payments questions.",
         "I understand you're asking about " +
-          userMessage.toLowerCase() +
-          '. Let me help you with that.',
+        userMessage.toLowerCase() +
+        '. Let me help you with that.',
         "That's an interesting question. In the context of banking and payments, I can provide some guidance.",
         "I'm a banking and payments AI assistant. How can I help you today?",
         "Your message has been received. I'm processing your request and will provide a detailed response.",
