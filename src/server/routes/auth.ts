@@ -1,5 +1,5 @@
 import Hapi from '@hapi/hapi';
-import Joi from '@hapi/joi';
+import Joi from 'joi';
 import { JWTService, User } from '../services/jwt-service';
 import { logger } from '../utils/logging';
 
@@ -19,6 +19,37 @@ export const authRoutes: Hapi.Plugin<{}> = {
     name: 'auth-routes',
     register: async (server: Hapi.Server): Promise<void> => {
         const jwtService = new JWTService();
+
+        // Register JWT authentication strategy
+        server.auth.strategy('jwt', 'jwt', {
+            keys: process.env.JWT_SECRET,
+            verify: {
+                aud: false,
+                iss: false,
+                sub: false,
+                maxAgeSec: parseInt(process.env.JWT_ACCESS_TOKEN_EXPIRY || '3600', 10),
+                timeSkewSec: 60,
+            },
+            validate: async (artifacts: any, request: Hapi.Request) => {
+                try {
+                    const payload = jwtService.verifyAccessToken(artifacts.token);
+                    request.log(['auth'], `JWT validated for user: ${payload.userId}`);
+                    return {
+                        isValid: true,
+                        credentials: {
+                            userId: payload.userId,
+                            sessionId: payload.sessionId,
+                            email: payload.email,
+                            name: payload.name,
+                            role: payload.role,
+                        },
+                    };
+                } catch (error) {
+                    request.log(['auth', 'error'], `JWT validation failed: ${(error as Error).message}`);
+                    return { isValid: false };
+                }
+            },
+        });
 
         // Login endpoint - generates access and refresh tokens
         server.route({

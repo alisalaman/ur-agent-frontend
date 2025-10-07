@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>JWT WebSocket Test</title>
 </head>
+
 <body>
     <h1>JWT WebSocket Test</h1>
     <div id="output"></div>
-    
+
     <script>
         // Test the WebSocket service with JWT token
         const output = document.getElementById('output');
-        
+
         function log(message) {
             output.innerHTML += '<p>' + message + '</p>';
             console.log(message);
         }
-        
+
         // Simulate the configuration from the chat page
         const sessionId = 'test-session';
         const userId = 'test-user';
@@ -28,11 +30,11 @@
             timeout: 10000,
             token: jwtToken
         };
-        
+
         log('Testing WebSocket service with JWT token...');
         log('JWT Token: ' + jwtToken);
         log('WebSocket URL: ' + wsConfig.url);
-        
+
         // Test the URL building logic
         let wsUrl = wsConfig.url;
         const tokenToUse = jwtToken;
@@ -43,22 +45,22 @@
         } else {
             log('No token provided for WebSocket connection');
         }
-        
+
         // Test WebSocket connection
         try {
             log('Attempting WebSocket connection...');
             const ws = new WebSocket(wsUrl);
-            
-            ws.onopen = function() {
+
+            ws.onopen = function () {
                 log('WebSocket connected successfully!');
                 ws.close();
             };
-            
-            ws.onerror = function(error) {
+
+            ws.onerror = function (error) {
                 log('WebSocket error: ' + error);
             };
-            
-            ws.onclose = function(event) {
+
+            ws.onclose = function (event) {
                 log('WebSocket closed with code: ' + event.code + ', reason: ' + event.reason);
             };
         } catch (error) {
@@ -66,4 +68,5 @@
         }
     </script>
 </body>
+
 </html>

@@ -11,6 +11,11 @@ export interface AppConfig {
     secret: string;
     ttl: number;
   };
+  jwt: {
+    secret: string;
+    accessTokenExpiry: number;
+    refreshTokenExpiry: number;
+  };
   monitoring: {
     enabled: boolean;
     logLevel: string;

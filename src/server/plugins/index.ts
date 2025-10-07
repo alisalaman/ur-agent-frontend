@@ -1,6 +1,7 @@
 import Hapi from '@hapi/hapi';
 import Inert from '@hapi/inert';
 import Vision from '@hapi/vision';
+import JWT from '@hapi/jwt';
 import path from 'path';
 import { sessionPlugin } from './session';
 import { websocketPlugin } from './websocket';
@@ -12,6 +13,9 @@ export async function registerPlugins(server: Hapi.Server): Promise<void> {
 
   // Register Vision
   await server.register(Vision);
+
+  // Register JWT plugin
+  await server.register(JWT);
 
   // Register session plugin
   await server.register(sessionPlugin);

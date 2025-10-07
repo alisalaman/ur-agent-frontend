@@ -1,10 +1,14 @@
 import jwt from 'jsonwebtoken';
+import { appConfig } from '../config';
 import { logger } from '../utils/logging';
 
 export interface JWTPayload {
   userId: string;
   sessionId: string;
   type: 'access_token' | 'refresh_token';
+  email?: string;
+  name?: string;
+  role?: string;
   exp: number;
   iat: number;
 }
@@ -22,9 +26,14 @@ export class JWTService {
   private refreshTokenExpiry: number;
 
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret-change-in-production';
-    this.accessTokenExpiry = parseInt(process.env.JWT_ACCESS_TOKEN_EXPIRY || '3600', 10); // 1 hour
-    this.refreshTokenExpiry = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY || '86400', 10); // 24 hours
+    this.jwtSecret = appConfig.jwt.secret;
+    this.accessTokenExpiry = appConfig.jwt.accessTokenExpiry;
+    this.refreshTokenExpiry = appConfig.jwt.refreshTokenExpiry;
+
+    if (!this.jwtSecret || this.jwtSecret === 'default-jwt-secret-change-in-production') {
+      logger.error('JWT_SECRET is not properly configured. Please set a secure JWT_SECRET in your environment variables.');
+      throw new Error('JWT_SECRET is not properly configured');
+    }
   }
 
   /**
@@ -42,6 +51,11 @@ export class JWTService {
       exp: now + this.accessTokenExpiry,
       iat: now,
     };
+
+    // Add optional properties only if they exist
+    if (user.email) payload.email = user.email;
+    if (user.name) payload.name = user.name;
+    if (user.role) payload.role = user.role;
 
     return jwt.sign(payload, this.jwtSecret, {
       algorithm: 'HS256',
