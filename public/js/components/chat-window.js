@@ -9,14 +9,16 @@ export class ChatWindow {
     wsService;
     sessionId;
     userId;
+    jwtToken = null;
     responseTimeouts = [];
     // Constants for response simulation
     static MIN_RESPONSE_DELAY = 1000;
     static MAX_RESPONSE_DELAY = 2000;
-    constructor(container, sessionId, userId, wsConfig) {
+    constructor(container, sessionId, userId, wsConfig, jwtToken) {
         this.container = container;
         this.sessionId = sessionId;
         this.userId = userId;
+        this.jwtToken = jwtToken || null;
         this.wsService = new WebSocketService(wsConfig);
         this.initializeElements();
         this.setupEventListeners();
@@ -46,6 +48,10 @@ export class ChatWindow {
             console.log('Chat window WebSocket URL:', wsUrl);
             console.log('WebSocket service config:', this.wsService.config);
             if (this.wsService && wsUrl && wsUrl !== 'demo-mode') {
+                // Get JWT token if not already provided
+                if (!this.jwtToken) {
+                    await this.getJWTToken();
+                }
                 // Try to connect to the AI agent service
                 console.log('Attempting to connect to AI agent service:', wsUrl);
                 // Set a timeout for WebSocket connection attempts
@@ -54,7 +60,7 @@ export class ChatWindow {
                 });
                 try {
                     await Promise.race([
-                        this.wsService.connect(this.sessionId, this.userId),
+                        this.wsService.connect(this.sessionId, this.userId, this.jwtToken || undefined),
                         connectionTimeout,
                     ]);
                 }
@@ -267,6 +273,39 @@ export class ChatWindow {
         this.responseTimeouts = [];
         if (this.wsService) {
             this.wsService.disconnect();
+        }
+    }
+    /**
+     * Gets a JWT token for WebSocket authentication
+     */
+    async getJWTToken() {
+        try {
+            const response = await fetch('/api/v1/auth/websocket-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Include session cookie
+                body: JSON.stringify({
+                    sessionId: this.sessionId,
+                }),
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.success && data.token) {
+                this.jwtToken = data.token;
+                console.log('JWT token obtained for WebSocket connection');
+            }
+            else {
+                throw new Error('Failed to get JWT token');
+            }
+        }
+        catch (error) {
+            console.error('Failed to get JWT token:', error);
+            // Fall back to demo mode if JWT token retrieval fails
+            this.updateStatus('demo', 'Demo Mode - Authentication Failed');
         }
     }
 }

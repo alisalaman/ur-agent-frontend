@@ -1,5 +1,6 @@
 import { WebSocketService } from '../services/websocket-service';
 import { ChatMessage } from '../types/session';
+import { WebSocketConfig } from '../types/websocket';
 
 export class ChatWindow {
   private container: HTMLElement;
@@ -11,16 +12,24 @@ export class ChatWindow {
   private wsService: WebSocketService;
   private sessionId: string;
   private userId: string;
+  private jwtToken: string | null = null;
   private responseTimeouts: NodeJS.Timeout[] = [];
 
   // Constants for response simulation
   private static readonly MIN_RESPONSE_DELAY = 1000;
   private static readonly MAX_RESPONSE_DELAY = 2000;
 
-  constructor(container: HTMLElement, sessionId: string, userId: string, wsConfig: any) {
+  constructor(
+    container: HTMLElement,
+    sessionId: string,
+    userId: string,
+    wsConfig: WebSocketConfig,
+    jwtToken?: string
+  ) {
     this.container = container;
     this.sessionId = sessionId;
     this.userId = userId;
+    this.jwtToken = jwtToken || null;
     this.wsService = new WebSocketService(wsConfig);
     this.initializeElements();
     this.setupEventListeners();
@@ -50,11 +59,15 @@ export class ChatWindow {
     try {
       // In Phase 2, WebSocket connection is optional for demo purposes
       // Only connect if WebSocket URL is provided and not a placeholder
-      const wsUrl = (this.wsService as any).config?.url;
+      const wsUrl = this.wsService.config?.url;
       console.log('Chat window WebSocket URL:', wsUrl);
-      console.log('WebSocket service config:', (this.wsService as any).config);
+      console.log('WebSocket service config:', this.wsService.config);
 
       if (this.wsService && wsUrl && wsUrl !== 'demo-mode') {
+        // Get JWT token if not already provided
+        if (!this.jwtToken) {
+          await this.getJWTToken();
+        }
         // Try to connect to the AI agent service
         console.log('Attempting to connect to AI agent service:', wsUrl);
 
@@ -65,7 +78,7 @@ export class ChatWindow {
 
         try {
           await Promise.race([
-            this.wsService.connect(this.sessionId, this.userId),
+            this.wsService.connect(this.sessionId, this.userId, this.jwtToken || undefined),
             connectionTimeout,
           ]);
         } catch (connectionError) {
@@ -179,14 +192,20 @@ export class ChatWindow {
     this.sendButton.disabled = true;
   }
 
-  private handleMessage(message: any): void {
+  private handleMessage(message: unknown): void {
+    const msg = message as {
+      id: string;
+      content: string;
+      timestamp: string;
+      metadata?: Record<string, unknown>;
+    };
     this.addMessageToUI({
-      id: message.id,
+      id: msg.id,
       sessionId: this.sessionId,
-      content: message.content,
+      content: msg.content,
       role: 'assistant',
-      timestamp: new Date(message.timestamp),
-      metadata: message.metadata || {},
+      timestamp: new Date(msg.timestamp),
+      metadata: msg.metadata || {},
       status: 'delivered',
     });
   }
@@ -320,6 +339,40 @@ export class ChatWindow {
 
     if (this.wsService) {
       this.wsService.disconnect();
+    }
+  }
+
+  /**
+   * Gets a JWT token for WebSocket authentication
+   */
+  private async getJWTToken(): Promise<void> {
+    try {
+      const response = await fetch('/api/v1/auth/websocket-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include session cookie
+        body: JSON.stringify({
+          sessionId: this.sessionId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.token) {
+        this.jwtToken = data.token;
+        console.log('JWT token obtained for WebSocket connection');
+      } else {
+        throw new Error('Failed to get JWT token');
+      }
+    } catch (error) {
+      console.error('Failed to get JWT token:', error);
+      // Fall back to demo mode if JWT token retrieval fails
+      this.updateStatus('demo', 'Demo Mode - Authentication Failed');
     }
   }
 }

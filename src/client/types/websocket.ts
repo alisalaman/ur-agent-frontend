@@ -3,7 +3,7 @@ export interface WebSocketMessage {
   type: 'message' | 'query' | 'response' | 'error' | 'status' | 'ping' | 'pong';
   content: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface WebSocketConnection {
@@ -21,4 +21,5 @@ export interface WebSocketConfig {
   reconnectDelay: number;
   heartbeatInterval: number;
   timeout: number;
+  token?: string;
 }

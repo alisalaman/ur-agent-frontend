@@ -63,15 +63,17 @@
     document.addEventListener('DOMContentLoaded', function () {
       const sessionId = '{{ sessionId }}';
       const userId = '{{ userId }}';
+      const jwtToken = '{{ jwtToken or "" }}';
       const wsConfig = {
         url: '{{ wsUrl }}',
         reconnectAttempts: 5,
         reconnectDelay: 1000,
         heartbeatInterval: 30000,
-        timeout: 10000
+        timeout: 10000,
+        token: jwtToken
       };
       const chatContainer = document.getElementById('chat-container');
-      const chatWindow = new ChatWindow(chatContainer, sessionId, userId, wsConfig);
+      const chatWindow = new ChatWindow(chatContainer, sessionId, userId, wsConfig, jwtToken);
       // Cleanup on page unload
       window.addEventListener('beforeunload', function () {
         chatWindow.disconnect();

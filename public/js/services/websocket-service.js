@@ -23,14 +23,15 @@ export class WebSocketService extends EventEmitter {
      * Establishes a WebSocket connection with retry logic
      * @param sessionId - Unique session identifier
      * @param userId - User identifier
+     * @param token - Optional JWT token for authentication
      * @returns Promise that resolves when connection is established
      * @throws {Error} If connection fails
      */
-    async connect(sessionId, userId) {
+    async connect(sessionId, userId, token) {
         const retryableConnect = await withExponentialBackoff(this.establishConnection.bind(this), retryConfigs.websocket);
-        await retryableConnect(sessionId, userId);
+        await retryableConnect(sessionId, userId, token);
     }
-    async establishConnection(sessionId, userId) {
+    async establishConnection(sessionId, userId, token) {
         return new Promise((resolve, reject) => {
             try {
                 this.connection = {
@@ -41,7 +42,13 @@ export class WebSocketService extends EventEmitter {
                     lastActivity: new Date(),
                     retryCount: 0,
                 };
-                this.ws = new WebSocket(this.config.url);
+                // Build WebSocket URL with token if provided
+                let wsUrl = this.config.url;
+                if (token) {
+                    const separator = wsUrl.includes('?') ? '&' : '?';
+                    wsUrl = `${wsUrl}${separator}token=${encodeURIComponent(token)}`;
+                }
+                this.ws = new WebSocket(wsUrl);
                 this.setupEventHandlers();
                 this.ws.onopen = () => {
                     this.connection.status = 'connected';
@@ -124,7 +131,7 @@ export class WebSocketService extends EventEmitter {
         this.connection.status = 'reconnecting';
         this.connection.retryCount++;
         this.reconnectTimer = setTimeout(() => {
-            this.connect(this.connection.sessionId, this.connection.userId).catch(() => {
+            this.connect(this.connection.sessionId, this.connection.userId, this.config.token).catch(() => {
                 // Reconnection will be handled by the close event
             });
         }, this.config.reconnectDelay * this.connection.retryCount);
